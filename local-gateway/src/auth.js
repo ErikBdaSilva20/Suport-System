@@ -1,0 +1,73 @@
+import { Router } from 'express';
+import { pool } from './db.js';
+
+const COOKIE_NAME = 'hd_session';
+const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function cookieOptions() {
+  return { httpOnly: true, sameSite: 'lax', secure: false, signed: true, maxAge: COOKIE_MAX_AGE_MS };
+}
+
+// Anexa req.user = { id, name, email, role } lendo o cookie de sessão e revalidando
+// contra o banco (assim uma promoção de papel feita via script já reflete na próxima
+// requisição, sem precisar de novo login).
+export async function loadSession(req, _res, next) {
+  const userId = req.signedCookies[COOKIE_NAME];
+  if (!userId) return next();
+  const { rows } = await pool.query('select id, name, email, role from "user" where id = $1', [userId]);
+  req.user = rows[0] ?? null;
+  next();
+}
+
+export function requireSession(req, res, next) {
+  if (!req.user) return res.status(401).type('text/plain').send('Não autenticado.');
+  next();
+}
+
+export const authRouter = Router();
+
+authRouter.post('/sign-up/email', async (req, res) => {
+  const { email, password, name } = req.body ?? {};
+  if (!email || !password || !name) {
+    return res.status(400).type('text/plain').send('Nome, e-mail e senha são obrigatórios.');
+  }
+
+  const existing = await pool.query('select id from "user" where email = $1', [email]);
+  if (existing.rows.length > 0) {
+    return res.status(409).type('text/plain').send('E-mail já cadastrado.');
+  }
+
+  const countResult = await pool.query('select count(*)::int as count from "user"');
+  const role = countResult.rows[0].count === 0 ? 'admin' : 'rep';
+
+  const { rows } = await pool.query(
+    'insert into "user" (name, email, password, role) values ($1, $2, $3, $4) returning id',
+    [name, email, password, role],
+  );
+
+  res.cookie(COOKIE_NAME, rows[0].id, cookieOptions());
+  res.status(204).end();
+});
+
+authRouter.post('/sign-in/email', async (req, res) => {
+  const { email, password } = req.body ?? {};
+  const { rows } = await pool.query('select id, password from "user" where email = $1', [email]);
+  const user = rows[0];
+  if (!user || user.password !== password) {
+    return res.status(401).type('text/plain').send('Credenciais inválidas.');
+  }
+
+  res.cookie(COOKIE_NAME, user.id, cookieOptions());
+  res.status(204).end();
+});
+
+authRouter.post('/sign-out', (req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.status(204).end();
+});
+
+authRouter.get('/me', (req, res) => {
+  if (!req.user) return res.status(401).type('text/plain').send('Não autenticado.');
+  const { id, name, email, role } = req.user;
+  res.json({ user: { id, name, email }, role });
+});
