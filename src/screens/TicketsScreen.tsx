@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, LayoutGrid } from 'lucide-react';
 import { listTickets, deleteTicket } from '@/lib/data/tickets.repo';
 import { listCustomers } from '@/lib/data/customers.repo';
 import type { Ticket } from '@/lib/data/tickets.repo';
@@ -95,9 +95,14 @@ export default function TicketsScreen() {
           <h1 className="text-2xl font-bold text-foreground">Tickets</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} tickets</p>
         </div>
-        <Button asChild className="gap-2">
-          <Link to="/tickets/new"><Plus className="h-4 w-4" /> Novo Ticket</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild className="gap-2">
+            <Link to="/tickets/kanban"><LayoutGrid className="h-4 w-4" /> Ver como Kanban</Link>
+          </Button>
+          <Button asChild className="gap-2">
+            <Link to="/tickets/new"><Plus className="h-4 w-4" /> Novo Ticket</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="relative w-64">
@@ -114,6 +119,7 @@ export default function TicketsScreen() {
               <TableHead>Cliente</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Prioridade</TableHead>
+              <TableHead>Categoria</TableHead>
               <TableHead className="text-right">Criado</TableHead>
               {isAdmin && <TableHead className="w-12"></TableHead>}
             </TableRow>
@@ -132,6 +138,7 @@ export default function TicketsScreen() {
                 <TableCell className="text-sm text-muted-foreground">{customersById.get(ticket.customer_id)?.name ?? '—'}</TableCell>
                 <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
                 <TableCell className="text-sm text-muted-foreground">{PRIORITY_LABEL[ticket.priority]}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{ticket.category ?? '—'}</TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{formatDate(ticket.created_at)}</TableCell>
                 {isAdmin && (
                   <TableCell className="text-right">
@@ -147,7 +154,7 @@ export default function TicketsScreen() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 7 : 6} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={isAdmin ? 8 : 7} className="text-center text-sm text-muted-foreground py-8">
                   Nenhum ticket encontrado.
                 </TableCell>
               </TableRow>

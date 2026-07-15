@@ -140,6 +140,7 @@ export default function TicketDetailScreen() {
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge>
             <Badge variant="secondary">{PRIORITY_LABEL[ticket.priority]}</Badge>
+            {ticket.category && <Badge variant="outline">{ticket.category}</Badge>}
           </div>
         </div>
       </div>

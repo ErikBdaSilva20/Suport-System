@@ -22,6 +22,7 @@ export default function TicketNewScreen() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TicketPriority>('medium');
+  const [category, setCategory] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -66,7 +67,7 @@ export default function TicketNewScreen() {
     }
     setSubmitting(true);
     try {
-      const ticket = await createTicket({ customer_id: customerId, subject: subject.trim(), description: description.trim(), priority });
+      const ticket = await createTicket({ customer_id: customerId, subject: subject.trim(), description: description.trim(), priority, category: category.trim() || null });
       toast({ title: 'Ticket criado', description: `#${ticket.number}` });
       navigate(`/tickets/${ticket.id}`);
     } catch (e: any) {
@@ -121,6 +122,11 @@ export default function TicketNewScreen() {
               <SelectItem value="high">Alta</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Categoria (opcional)</Label>
+          <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="Ex: Acesso, Financeiro, Integração" />
         </div>
 
         <div className="flex gap-2 pt-2">

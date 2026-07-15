@@ -5,7 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, RequireAuth, RequireAdmin } from "@/lib/auth";
 import LoginScreen from "@/screens/LoginScreen";
+import DashboardScreen from "@/screens/DashboardScreen";
 import TicketsScreen from "@/screens/TicketsScreen";
+import TicketKanbanScreen from "@/screens/TicketKanbanScreen";
 import TicketDetailScreen from "@/screens/TicketDetailScreen";
 import TicketNewScreen from "@/screens/TicketNewScreen";
 import CustomersScreen from "@/screens/CustomersScreen";
@@ -25,9 +27,11 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginScreen />} />
-            <Route path="/" element={<Navigate to="/tickets" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+              <Route path="/dashboard" element={<DashboardScreen />} />
               <Route path="/tickets" element={<TicketsScreen />} />
+              <Route path="/tickets/kanban" element={<TicketKanbanScreen />} />
               <Route path="/tickets/new" element={<TicketNewScreen />} />
               <Route path="/tickets/:id" element={<TicketDetailScreen />} />
               <Route path="/customers" element={<CustomersScreen />} />

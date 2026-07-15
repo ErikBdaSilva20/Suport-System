@@ -62,11 +62,11 @@ block_plan:
   - block: 2
     name: "Remover Edge Functions, segredos e código fora de escopo"
     epics: [2, 3]
-    note: "3.8 (Kanban/Dashboard) depende de decisão do usuário."
+    note: "Concluído. 3.8 (Kanban/Dashboard) decidido em 2026-07-15: manter ambos."
   - block: 3
     name: "Novo schema-alvo (Neon-ready)"
     epics: [4]
-    note: "4.3 (coluna category) depende de decisão do usuário."
+    note: "Concluído. 4.3 (coluna category) decidido em 2026-07-15: adicionar."
   - block: 4
     name: "Migrar para a fundação tenant-gateway"
     epics: [5]
@@ -74,25 +74,24 @@ block_plan:
   - block: 5
     name: "Papéis Rep/Manager/Admin + Fluxo WhatsApp"
     epics: [6, 7]
-    note: "6.4 (quem cadastra clientes) depende de decisão do usuário."
+    note: "Concluído. 6.4 confirmado formalmente em 2026-07-15 (rep cadastra inline)."
   - block: 6
     name: "Manifest do template e contrato do hub"
     epics: [8]
-    note: "8.2 (escolha de scaffold wiki vs forms-nps) depende de decisão do usuário."
+    note: "8.1 concluído. 8.2 (clonar scaffold wiki/forms-nps) bloqueada: repo masi-ai-orquestration/clone-templates/ não existe neste workspace isolado."
   - block: 7
     name: "Publish, catálogo e QA end-to-end"
     epics: [9]
     note: "Só inicia com blocos 1-6 completos."
 
 pending_user_decisions:
-  - story: 3-8-kanban-de-arrastar-e-soltar-e-dashboard-de-kpis
-    question: "Manter Kanban drag-and-drop (dnd-kit) e Dashboard de KPIs no escopo v1?"
-  - story: 4-3-adicionar-coluna-category-em-tickets
-    question: "Adicionar coluna category text em tickets?"
-  - story: 6-4-definir-quem-cadastra-clientes
-    question: "Quem cadastra clientes: rep na hora do chamado (recomendado) ou só manager/admin? (JÁ IMPLEMENTADO seguindo a recomendação — só falta confirmação formal.)"
   - story: 8-2-clonar-scaffold-base-e-portar-telas
-    question: "Scaffold base: wiki (Pro/shadcn) ou forms-nps (leve/CSS puro)?"
+    question: "Scaffold base: wiki (Pro/shadcn) ou forms-nps (leve/CSS puro)? BLOQUEADA: o repo masi-ai-orquestration/clone-templates/ não existe neste workspace (só helpdesk-masia isolado). Usuário decidiu pular por agora (2026-07-15); retomar quando o monorepo estiver acessível."
+
+# Decisões do usuário resolvidas em 2026-07-15:
+# - 3-8: manter Kanban (dnd-kit) E Dashboard de KPIs no v1 -> implementado.
+# - 4-3: adicionar coluna category text em tickets -> implementado.
+# - 6-4: confirmado formalmente que rep cadastra o próprio cliente inline (já era o comportamento) -> sem mudança de código.
 
 development_status:
   # ---- Block 1 ----
@@ -111,7 +110,7 @@ development_status:
   2-4-auditar-e-remover-chamadas-remanescentes-a-edge-functions-no-app: done
   epic-2-retrospective: optional
 
-  epic-3: in-progress # 3-8 pendente de decisão do usuário (Kanban/Dashboard KPIs)
+  epic-3: done
   3-1-remover-camada-de-codigo-de-ia-do-app: done
   3-2-remover-a-base-de-conhecimento-inteira: done
   3-3-remover-live-chat-realtime-e-portal-do-cliente: done
@@ -119,14 +118,14 @@ development_status:
   3-5-remover-sla-automatico: done
   3-6-remover-participantes-tags-avancadas-e-auditoria: done
   3-7-remover-anexos-de-ticket: done
-  3-8-kanban-de-arrastar-e-soltar-e-dashboard-de-kpis: backlog # pending_user_decision
+  3-8-kanban-de-arrastar-e-soltar-e-dashboard-de-kpis: done # decisão: manter ambos. DashboardScreen (KPIs + recentes) em /dashboard; TicketKanbanScreen (@dnd-kit) em /tickets/kanban, drag desabilitado para rep
   epic-3-retrospective: optional
 
   # ---- Block 3 ----
-  epic-4: in-progress # 4-3 pendente de decisão do usuário (coluna category)
+  epic-4: done
   4-1-migration-de-poda-dropar-tudo-fora-de-escopo: done
   4-2-criar-schema-alvo-customers-tickets-ticket-notes: done
-  4-3-adicionar-coluna-category-em-tickets: backlog # pending_user_decision
+  4-3-adicionar-coluna-category-em-tickets: done # migration 20260715190200_ticket_category.sql; campo no TicketNewScreen, exibido em TicketsScreen/TicketDetailScreen
   epic-4-retrospective: optional
 
   # ---- Block 4 ----
@@ -139,11 +138,11 @@ development_status:
   epic-5-retrospective: optional
 
   # ---- Block 5 (satisfeito como efeito colateral do achatamento da Epic 5) ----
-  epic-6: in-progress # 6-4 já implementada pela recomendação da doc, aguardando sua confirmação formal
+  epic-6: done
   6-1-remover-profiles-has-role-get-my-role-consumir-auth-me: done
   6-2-ui-condicional-por-role: done
   6-3-definir-fluxo-de-promocao-a-manager-admin: done # limitação v1 documentada na SettingsScreen, conforme a própria AC aceita
-  6-4-definir-quem-cadastra-clientes: done # implementado per recomendação (rep cadastra inline) — pending_user_decision só para confirmação formal
+  6-4-definir-quem-cadastra-clientes: done # confirmado formalmente pelo usuário em 2026-07-15 (rep cadastra inline) — sem mudança de código
   epic-6-retrospective: optional
 
   epic-7: done
@@ -152,9 +151,9 @@ development_status:
   epic-7-retrospective: optional
 
   # ---- Block 6 ----
-  epic-8: in-progress # 8-3 e 8-4 já saíram de brinde no Bloco 4; falta 8-1 (manifest) e 8-2 (scaffold, pendente de decisão)
-  8-1-criar-masi-template-json: backlog
-  8-2-clonar-scaffold-base-e-portar-telas: backlog # pending_user_decision
+  epic-8: in-progress # falta só 8-2 (scaffold), bloqueada por falta do repo clone-templates neste workspace
+  8-1-criar-masi-template-json: done # masi.template.json criado na raiz do repo
+  8-2-clonar-scaffold-base-e-portar-telas: backlog # repo masi-ai-orquestration/clone-templates/ inacessível neste workspace; usuário decidiu pular por agora (2026-07-15), ver pending_user_decisions
   8-3-atualizar-types-gen-ts-batendo-com-o-schema-alvo: done # feito no Bloco 4 (task 5a), junto com client.ts
   8-4-ajustar-branch-preview-do-client-ts-com-fixtures: done # feito no Bloco 4 (task 5a): preview-fixtures.ts + branch PREVIEW em client.ts
   epic-8-retrospective: optional

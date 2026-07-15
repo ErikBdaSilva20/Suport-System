@@ -10,9 +10,10 @@ export const createTicket = (input: {
   subject: string;
   description: string;
   priority?: TicketPriority;
+  category?: string | null;
 }) => db.table<Ticket>('tickets').create(input);
 
-export const updateTicket = (id: string, patch: Partial<Pick<Ticket, 'subject' | 'description' | 'status' | 'priority' | 'assigned_to' | 'resolved_at'>>) =>
+export const updateTicket = (id: string, patch: Partial<Pick<Ticket, 'subject' | 'description' | 'status' | 'priority' | 'assigned_to' | 'resolved_at' | 'category'>>) =>
   db.table<Ticket>('tickets').update(id, patch);
 
 export const deleteTicket = (id: string) => db.table<Ticket>('tickets').remove(id);

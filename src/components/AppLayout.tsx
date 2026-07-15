@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Ticket, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, Settings, LogOut } from 'lucide-react';
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent,
   SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth';
 
 const navItems = [
+  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Tickets', url: '/tickets', icon: Ticket },
   { title: 'Clientes', url: '/customers', icon: Users },
   { title: 'Configurações', url: '/settings', icon: Settings, adminOnly: true },

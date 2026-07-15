@@ -27,13 +27,13 @@ export const previewTickets: Ticket[] = [
   {
     id: 'tk-1', owner_id: OWNER_ID, number: 1, customer_id: 'cust-1',
     subject: 'Sistema de login não funciona', description: 'Após a atualização de ontem ninguém consegue acessar.',
-    status: 'open', priority: 'high', assigned_to: null, resolved_at: null,
+    status: 'open', priority: 'high', assigned_to: null, resolved_at: null, category: 'Acesso',
     created_at: now, updated_at: now,
   },
   {
     id: 'tk-2', owner_id: OWNER_ID, number: 2, customer_id: 'cust-2',
     subject: 'Dúvida sobre integração', description: 'Como faço para integrar com a API REST?',
-    status: 'in_progress', priority: 'medium', assigned_to: OWNER_ID, resolved_at: null,
+    status: 'in_progress', priority: 'medium', assigned_to: OWNER_ID, resolved_at: null, category: 'Integração',
     created_at: now, updated_at: now,
   },
 ];

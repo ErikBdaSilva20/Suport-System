@@ -1,4 +1,5 @@
-// Gerado a partir de supabase/migrations/20260715190000_target_schema.sql.
+// Gerado a partir de supabase/migrations/20260715190000_target_schema.sql
+// e supabase/migrations/20260715190200_ticket_category.sql.
 // PROTEGIDO: contrato com o gateway — não editar à mão fora de uma migration nova.
 
 export type TicketStatus = 'open' | 'in_progress' | 'resolved';
@@ -31,6 +32,7 @@ export interface Database {
           priority: TicketPriority;
           assigned_to: string | null;
           resolved_at: string | null;
+          category: string | null;
           created_at: string;
           updated_at: string;
         };

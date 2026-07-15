@@ -1,0 +1,47 @@
+{
+  "id": "helpdesk-crud",
+  "name": "Help Desk",
+  "description": "Central de atendimento CRUD: reps abrem chamados, manager/admin atendem e conversam com o cliente pelo WhatsApp.",
+  "version": "1.0.0",
+  "engine": "vite-react-gateway",
+  "schemaVersion": 1,
+  "migrations": [
+    "20260715190000_target_schema.sql",
+    "20260715190100_settings_table.sql",
+    "20260715190200_ticket_category.sql"
+  ],
+  "auth": { "provider": "better-auth", "roles": ["admin", "manager", "rep"] },
+  "screens": [
+    { "id": "dashboard", "route": "/dashboard", "title": "Dashboard", "file": "src/screens/DashboardScreen" },
+    { "id": "tickets", "route": "/tickets", "title": "Tickets", "file": "src/screens/TicketsScreen" },
+    { "id": "tickets-kanban", "route": "/tickets/kanban", "title": "Kanban de tickets", "file": "src/screens/TicketKanbanScreen" },
+    { "id": "ticket-new", "route": "/tickets/new", "title": "Novo Ticket", "file": "src/screens/TicketNewScreen" },
+    { "id": "ticket-detail", "route": "/tickets/:id", "title": "Detalhe do Ticket", "file": "src/screens/TicketDetailScreen" },
+    { "id": "customers", "route": "/customers", "title": "Clientes", "file": "src/screens/CustomersScreen" },
+    { "id": "customer-detail", "route": "/customers/:id", "title": "Detalhe do Cliente", "file": "src/screens/CustomerDetailScreen" },
+    { "id": "settings", "route": "/settings", "title": "Configurações", "file": "src/screens/SettingsScreen" }
+  ],
+  "editable": {
+    "allow": [
+      "src/screens/**",
+      "src/components/**",
+      "src/lib/data/*.repo.ts",
+      "src/lib/format.ts",
+      "src/index.css"
+    ],
+    "protect": [
+      "src/lib/data/client.ts",
+      "src/lib/data/types.gen.ts",
+      "src/lib/data/preview-fixtures.ts",
+      "src/lib/auth.tsx",
+      "src/main.tsx",
+      "src/components/ui/**",
+      "src/lib/utils.ts",
+      "vite.config.ts",
+      "components.json",
+      "supabase/migrations/**"
+    ]
+  },
+  "composio": { "toolkits": [] },
+  "envContract": ["VITE_GATEWAY_URL"]
+}
