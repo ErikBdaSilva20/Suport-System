@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Building2, Clock, Rocket, Send } from 'lucide-react';
+import { ArrowRight, Check, Building2, Clock, Rocket } from 'lucide-react';
 import { SaveSLAPolicyUseCase } from '@/application/settings/SaveSLAPolicyUseCase';
 import { UpdateSettingsUseCase } from '@/application/settings/UpdateSettingsUseCase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ResendStep } from '@/components/setup/steps/ResendStep';
 
 const DEFAULT_SLA = [
   { priority: 'urgent' as const, firstResponse: 1, resolution: 4 },
@@ -18,7 +17,7 @@ const DEFAULT_SLA = [
 
 const PRIORITY_LABELS: Record<string, string> = { urgent: 'Urgente', high: 'Alta', medium: 'Média', low: 'Baixa' };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 export default function SetupWizard() {
   const navigate = useNavigate();
@@ -76,7 +75,7 @@ export default function SetupWizard() {
       <Rocket className="h-16 w-16 mx-auto text-primary" />
       <h2 className="text-2xl font-bold text-foreground">Bem-vindo ao HelpDesk!</h2>
       <p className="text-muted-foreground max-w-md mx-auto">
-        Vamos configurar sua central em poucos passos. As chaves do Resend (envio + recebimento) são pedidas aqui no app.
+        Vamos configurar sua central em poucos passos.
       </p>
       <Button onClick={() => setStep(1)} className="gap-2">Começar <ArrowRight className="h-4 w-4" /></Button>
     </div>,
@@ -136,22 +135,7 @@ export default function SetupWizard() {
       </div>
     </div>,
 
-    // Step 3: Resend (envio + recebimento)
-    <div key="resend" className="space-y-4 max-w-lg mx-auto">
-      <div className="text-center mb-6">
-        <Send className="h-12 w-12 mx-auto text-primary mb-2" />
-        <h2 className="text-xl font-bold text-foreground">E-mails (Resend)</h2>
-        <p className="text-sm text-muted-foreground">Envio e recebimento — opcional, pode configurar depois</p>
-      </div>
-      <ResendStep onSaved={() => setStep(4)} />
-      <div className="flex justify-between pt-2">
-        <Button variant="ghost" size="sm" onClick={() => setStep(4)} className="text-muted-foreground">
-          Configurar depois
-        </Button>
-      </div>
-    </div>,
-
-    // Step 4: Done
+    // Step 3: Done
     <div key="done" className="text-center space-y-4">
       <div className="h-16 w-16 mx-auto rounded-full bg-sla-ok/20 flex items-center justify-center">
         <Check className="h-8 w-8 text-sla-ok" />

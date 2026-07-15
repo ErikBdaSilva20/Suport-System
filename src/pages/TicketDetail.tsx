@@ -2,15 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Paperclip, Sparkles, Pencil, History } from 'lucide-react';
-import { CustomerHistoryDrawer } from '@/components/ticket/CustomerHistoryDrawer';
+import { ArrowLeft, Paperclip, Pencil, MessageCircle } from 'lucide-react';
 import { EditTicketTitleDialog } from '@/components/EditTicketTitleDialog';
 import { useTicketDetail } from '@/presentation/hooks/ticketing/useTicketDetail';
-import { LiveChatPanel } from '@/components/LiveChatPanel';
 import { useAuth } from '@/presentation/hooks/identity/useAuth';
-import { useKBSuggestions } from '@/presentation/hooks/knowledge-base/useKBSuggestions';
 import { useRealtime } from '@/presentation/context/RealtimeContext';
 import { UpdateTicketStatusUseCase } from '@/application/ticketing/UpdateTicketStatusUseCase';
 import { AssignTicketUseCase } from '@/application/ticketing/AssignTicketUseCase';
@@ -24,8 +21,6 @@ import { AuditTimeline } from '@/components/AuditTimeline';
 import { MessageComposer } from '@/components/MessageComposer';
 import { TicketParticipantsCard } from '@/components/TicketParticipantsCard';
 import { AgentAvatar } from '@/components/AgentAvatar';
-import { AISuggestionCard } from '@/components/AISuggestionCard';
-import { useAISuggestions, type AISuggestion } from '@/presentation/hooks/ticketing/useAISuggestions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +31,12 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { TicketMessage, TicketStatus, TicketPriority } from '@/types';
 import type { ProfileProps } from '@/domain/identity/entities/Profile';
+
+function buildWhatsAppLink(phone: string, customerName: string, ticketNumber: number, subject: string) {
+  const digits = phone.replace(/\D/g, '');
+  const text = encodeURIComponent(`Olá ${customerName}, sobre o chamado #${ticketNumber}: ${subject}`);
+  return `https://wa.me/${digits}?text=${text}`;
+}
 
 function timeAgo(dateStr: string) {
   const d = new Date(dateStr);
@@ -135,7 +136,6 @@ const PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [
 
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data, isLoading, refetch } = useTicketDetail(id);
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -145,10 +145,6 @@ export default function TicketDetail() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessageCount = useRef<number>(0);
   const [titleDialogOpen, setTitleDialogOpen] = useState(false);
-  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
-
-  const suggestions = useKBSuggestions(data?.ticket.subject ?? '');
-  const { suggestions: aiSuggestions, resolve: resolveAISuggestion } = useAISuggestions(id);
 
   useEffect(() => {
     getProfileRepository().listAgents(true).then(list => setAgents(list.map(a => a.toPlainObject())));
@@ -239,23 +235,6 @@ export default function TicketDetail() {
     }
   };
 
-  const handleApplyAISuggestion = async (s: AISuggestion) => {
-    if (!id) return;
-    try {
-      const updates: { priority?: TicketPriority; status?: TicketStatus } = {};
-      if (s.suggested_priority) updates.priority = s.suggested_priority;
-      if (s.suggested_status) updates.status = s.suggested_status;
-      if (Object.keys(updates).length > 0) {
-        await getTicketRepository().update(id, updates);
-      }
-      await resolveAISuggestion(s.id, 'applied');
-      refetch();
-      toast({ title: 'Sugestão aplicada' });
-    } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
-    }
-  };
-
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-48 w-full" /></div>;
   }
@@ -318,30 +297,7 @@ export default function TicketDetail() {
             )}
           </div>
         </div>
-        {customer && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setHistoryDrawerOpen(true)}
-            className="flex-shrink-0 gap-1.5"
-            title="Consultar histórico deste cliente com IA"
-          >
-            <History className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Histórico do cliente</span>
-            <Sparkles className="h-3 w-3 text-primary" />
-          </Button>
-        )}
       </div>
-
-      {customer && (
-        <CustomerHistoryDrawer
-          open={historyDrawerOpen}
-          onOpenChange={setHistoryDrawerOpen}
-          ticketId={ticket.id}
-          customerId={customer.id}
-          customerName={customer.name}
-        />
-      )}
 
       <div className="flex gap-4 items-start lg:flex-1 lg:min-h-0 lg:mt-4">
         <div className="flex-[7] space-y-3 min-w-0 lg:h-full lg:flex lg:flex-col lg:space-y-0">
@@ -358,21 +314,13 @@ export default function TicketDetail() {
             </div>
           </ScrollArea>
           <div className="lg:flex-shrink-0 lg:pt-3 lg:border-t lg:border-border">
-            <MessageComposer ticketId={ticket.id} ticketChannel={ticket.channel} customerEmail={customer?.email} zendeskTicketId={zendeskInfo?.ticketId ?? null} onSent={refetch} />
+            <MessageComposer ticketId={ticket.id} onSent={refetch} />
           </div>
         </div>
 
         <div className="flex-[3] min-w-[280px] hidden lg:block lg:h-full">
           <ScrollArea className="h-full pr-3">
             <div className="space-y-4 pb-3">
-              {aiSuggestions.map((s) => (
-                <AISuggestionCard
-                  key={s.id}
-                  suggestion={s}
-                  onApply={handleApplyAISuggestion}
-                  onDismiss={(sid) => resolveAISuggestion(sid, 'dismissed')}
-                />
-              ))}
               {/* Actions */}
               <div className="rounded-lg border border-border bg-card p-4 space-y-3">
                 <h2 className="text-sm font-semibold text-foreground">Ações</h2>
@@ -410,6 +358,17 @@ export default function TicketDetail() {
                     </SelectContent>
                   </Select>
                 </div>
+                {customer?.phone && (
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-xs text-sla-ok border-sla-ok/40 hover:bg-sla-ok/10" asChild>
+                    <a
+                      href={buildWhatsAppLink(customer.phone, customer.name, ticket.number, ticket.subject)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> Abrir conversa no WhatsApp
+                    </a>
+                  </Button>
+                )}
               </div>
 
               {customer && (
@@ -420,35 +379,6 @@ export default function TicketDetail() {
               )}
 
               <TicketParticipantsCard ticketId={ticket.id} />
-
-              <LiveChatPanel ticketId={ticket.id} zendeskTicketId={zendeskInfo?.ticketId ?? null} onEnded={refetch} />
-
-              {/* KB Assistant + Suggestions */}
-              <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" /> Base de Conhecimento
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2 text-xs"
-                  onClick={() => {
-                    navigate(`/kb/assistant?ticketId=${ticket.id}`);
-                  }}
-                >
-                  <Sparkles className="h-3 w-3" /> Perguntar à IA sobre este ticket
-                </Button>
-                {suggestions.data.length > 0 && (
-                  <div className="space-y-1.5 pt-2 border-t border-border/50">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Artigos sugeridos</p>
-                    {suggestions.data.slice(0, 3).map(article => (
-                      <Link key={article.id} to={`/kb/${article.id}/edit`} className="block text-xs text-primary hover:underline truncate">
-                        {article.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               <div className="rounded-lg border border-border bg-card p-4">
                 <h2 className="text-sm font-semibold text-foreground mb-3">Timeline</h2>

@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Ticket, Users, BookOpen, Settings, Search, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, Settings, Search, LogOut } from 'lucide-react';
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent,
   SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -19,8 +19,6 @@ const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Tickets', url: '/tickets', icon: Ticket },
   { title: 'Clientes', url: '/customers', icon: Users },
-  { title: 'Base de Conhecimento', url: '/kb', icon: BookOpen },
-  { title: 'Assistente IA', url: '/kb/assistant', icon: Sparkles },
   { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 

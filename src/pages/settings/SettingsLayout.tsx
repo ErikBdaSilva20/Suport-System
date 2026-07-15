@@ -1,15 +1,10 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { Sliders, Clock, Tag, Users, Plug, Sparkles } from 'lucide-react';
+import { Outlet } from 'react-router-dom';
+import { Sliders, Users } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { cn } from '@/lib/utils';
 
 const sidebarItems = [
   { label: 'Geral', path: '/settings/general', icon: Sliders },
-  { label: 'SLA', path: '/settings/sla', icon: Clock },
-  { label: 'Tags', path: '/settings/tags', icon: Tag },
   { label: 'Equipe', path: '/settings/team', icon: Users },
-  { label: 'Automações IA', path: '/settings/automation', icon: Sparkles },
-  { label: 'Integrações', path: '/settings/integrations', icon: Plug },
 ];
 
 export default function SettingsLayout() {
