@@ -1,0 +1,2 @@
+ALTER TABLE public.ticket_messages ADD COLUMN IF NOT EXISTS zendesk_comment_id bigint;
+CREATE UNIQUE INDEX IF NOT EXISTS ticket_messages_zendesk_comment_id_key ON public.ticket_messages (zendesk_comment_id) WHERE zendesk_comment_id IS NOT NULL;

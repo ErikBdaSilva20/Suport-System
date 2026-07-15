@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can view published public articles" ON public.kb_articles;

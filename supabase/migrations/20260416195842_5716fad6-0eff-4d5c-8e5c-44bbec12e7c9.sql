@@ -1,0 +1,1 @@
+alter table public.tickets add column internal_title text;

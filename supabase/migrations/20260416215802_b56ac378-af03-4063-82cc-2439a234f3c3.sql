@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can insert (via triggers)" ON public.notifications;
