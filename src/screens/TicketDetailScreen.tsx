@@ -8,6 +8,7 @@ import type { Ticket } from '@/lib/data/tickets.repo';
 import type { Customer } from '@/lib/data/customers.repo';
 import type { TicketNote } from '@/lib/data/ticket_notes.repo';
 import { useAuth } from '@/lib/auth';
+import { markTicketSeen } from '@/hooks/use-open-tickets-badge';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,11 +17,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
 const STATUS_TONE: Record<string, string> = {
-  open: 'bg-status-open/15 text-status-open border-status-open/30',
-  in_progress: 'bg-status-pending/15 text-status-pending border-status-pending/30',
-  resolved: 'bg-status-resolved/15 text-status-resolved border-status-resolved/30',
+  open: 'bg-status-open text-white border-transparent',
+  in_progress: 'bg-status-pending text-white border-transparent',
+  resolved: 'bg-status-resolved text-white border-transparent',
 };
 const PRIORITY_LABEL: Record<string, string> = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+const PRIORITY_TONE: Record<string, string> = {
+  low: 'bg-priority-low text-white border-transparent',
+  medium: 'bg-priority-medium text-white border-transparent',
+  high: 'bg-priority-high text-white border-transparent',
+};
 
 function buildWhatsAppLink(phone: string, customerName: string, ticketNumber: number, subject: string) {
   const digits = phone.replace(/\D/g, '');
@@ -56,6 +62,7 @@ export default function TicketDetailScreen() {
     try {
       const [tickets, customers, ticketNotes] = await Promise.all([listTickets(), listCustomers(), listTicketNotes()]);
       const found = tickets.find(t => t.id === id) ?? null;
+      if (found) markTicketSeen(found.id);
       setTicket(found);
       setCustomer(found ? customers.find(c => c.id === found.customer_id) ?? null : null);
       setNotes(ticketNotes.filter(n => n.ticket_id === id).sort((a, b) => a.created_at.localeCompare(b.created_at)));
@@ -78,7 +85,7 @@ export default function TicketDetailScreen() {
     setUpdatingStatus(true);
     try {
       await assignTicket(ticket.id, session.user.id);
-      toast({ title: 'Ticket assumido' });
+      toast({ title: 'Ticket assumido', variant: 'success' });
       await load();
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
@@ -92,7 +99,7 @@ export default function TicketDetailScreen() {
     setUpdatingStatus(true);
     try {
       await resolveTicket(ticket.id);
-      toast({ title: 'Ticket concluído' });
+      toast({ title: 'Ticket concluído', variant: 'success' });
       await load();
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
@@ -107,6 +114,7 @@ export default function TicketDetailScreen() {
     try {
       await createTicketNote({ ticket_id: ticket.id, body: newNote.trim() });
       setNewNote('');
+      toast({ title: 'Nota salva', variant: 'success' });
       await load();
     } catch (e: any) {
       toast({ title: 'Erro ao salvar nota', description: e.message, variant: 'destructive' });
@@ -139,7 +147,7 @@ export default function TicketDetailScreen() {
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge>
-            <Badge variant="secondary">{PRIORITY_LABEL[ticket.priority]}</Badge>
+            <Badge variant="outline" className={PRIORITY_TONE[ticket.priority]}>{PRIORITY_LABEL[ticket.priority]}</Badge>
             {ticket.category && <Badge variant="outline">{ticket.category}</Badge>}
           </div>
         </div>

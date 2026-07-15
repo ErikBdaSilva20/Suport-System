@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Ticket, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, Settings, LogOut, Bell } from 'lucide-react';
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent,
   SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -7,7 +7,34 @@ import {
 } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
+import { useOpenTicketsBadge } from '@/hooks/use-open-tickets-badge';
+
+function NotificationBell() {
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const enabled = !!session && session.role !== 'rep';
+  const count = useOpenTicketsBadge(enabled);
+
+  if (!enabled) return null;
+
+  const label = !count ? 'Notificações, nenhum chamado novo' : `Notificações, ${count} chamados novos`;
+
+  return (
+    <Button
+      variant="ghost" size="icon" className="relative h-8 w-8 text-foreground/75 hover:text-foreground"
+      aria-label={label} onClick={() => navigate('/tickets')}
+    >
+      <Bell className="h-[18px] w-[18px]" />
+      {!!count && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 animate-pulse items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold leading-none text-destructive-foreground">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+    </Button>
+  );
+}
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -82,11 +109,14 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
             <SidebarTrigger />
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium text-foreground hidden md:block">{session?.user.name}</span>
+            <div className="flex items-center gap-3">
+              <NotificationBell />
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-foreground hidden md:block">{session?.user.name}</span>
+              </div>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-6">

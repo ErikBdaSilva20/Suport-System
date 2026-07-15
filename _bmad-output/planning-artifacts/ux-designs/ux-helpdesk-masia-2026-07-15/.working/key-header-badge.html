@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Mock — Sino de notificação no header (AppLayout)</title>
+<style>
+/*
+  Governa: DESIGN.md → Components.notification-badge, Colors
+  Governa: EXPERIENCE.md → Component Patterns (Notification badge), State Patterns
+  (badge 0 / 1-9 / 9+). Tokens copiados de src/index.css :root (modo claro).
+  Sem rede, sem JS — cada coluna é um estado fixo do mesmo header.
+*/
+:root {
+  --background: hsl(0 0% 93%);
+  --foreground: hsl(213 96% 9%);
+  --card: hsl(0 0% 98%);
+  --border: hsl(0 0% 82%);
+  --primary: hsl(213 96% 9%);
+  --primary-foreground: hsl(0 0% 100%);
+  --muted-foreground: hsl(213 40% 30%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --accent-primary: hsl(239 84% 67%);
+  --sidebar-background: hsl(213 96% 6%);
+  --sidebar-foreground: hsl(250 15% 75%);
+  --sidebar-primary: hsl(239 84% 67%);
+  --radius: 0.625rem;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 40px;
+  background: #e5e5e5;
+  font-family: Inter, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--foreground);
+}
+h1 { font-size: 14px; font-weight: 600; color: #444; margin: 0 0 24px; }
+.frames { display: flex; gap: 24px; flex-wrap: wrap; }
+.frame {
+  width: 420px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(26,26,46,0.12);
+  background: var(--background);
+}
+.frame-caption {
+  font-size: 12px;
+  color: #555;
+  padding: 8px 4px 0;
+  width: 420px;
+}
+.app-shell { display: flex; height: 220px; }
+.sidebar { width: 56px; background: var(--sidebar-background); flex-shrink: 0; padding-top: 16px; text-align: center; }
+.sidebar .logo { color: var(--sidebar-foreground); font-size: 12px; font-weight: 700; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.header {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.8);
+}
+.trigger { width: 16px; height: 16px; border: 1.5px solid var(--muted-foreground); border-radius: 3px; opacity: 0.6; }
+.right-cluster { display: flex; align-items: center; gap: 14px; }
+.bell-wrap { position: relative; width: 20px; height: 20px; color: var(--foreground); opacity: 0.75; }
+.bell-wrap svg { width: 20px; height: 20px; }
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.avatar {
+  width: 32px; height: 32px; border-radius: 9999px;
+  background: var(--primary); color: var(--primary-foreground);
+  font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.name { font-size: 13px; font-weight: 500; }
+.avatar-cluster { display: flex; align-items: center; gap: 8px; }
+.body-fill { flex: 1; background: var(--background); }
+.tooltip {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  padding: 0 4px;
+}
+</style>
+</head>
+<body>
+<h1>AppLayout — header com sino de notificação (só admin/manager)</h1>
+<div class="frames">
+
+  <div>
+    <div class="frame">
+      <div class="app-shell">
+        <div class="sidebar"><div class="logo">HD</div></div>
+        <div class="main">
+          <div class="header">
+            <div class="trigger"></div>
+            <div class="right-cluster">
+              <div class="bell-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
+                  <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+                </svg>
+                <span class="badge">3</span>
+              </div>
+              <div class="avatar-cluster">
+                <div class="avatar">RS</div>
+                <span class="name">Renata Souza</span>
+              </div>
+            </div>
+          </div>
+          <div class="body-fill"></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-caption">Estado normal — 3 chamados <code>open</code> ainda não abertos individualmente por Renata.</div>
+  </div>
+
+  <div>
+    <div class="frame">
+      <div class="app-shell">
+        <div class="sidebar"><div class="logo">HD</div></div>
+        <div class="main">
+          <div class="header">
+            <div class="trigger"></div>
+            <div class="right-cluster">
+              <div class="bell-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
+                  <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+                </svg>
+                <span class="badge">9+</span>
+              </div>
+              <div class="avatar-cluster">
+                <div class="avatar">RS</div>
+                <span class="name">Renata Souza</span>
+              </div>
+            </div>
+          </div>
+          <div class="body-fill"></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-caption">Teto do contador — 10+ chamados novos vira <code>9+</code>, nunca cresce sem limite.</div>
+  </div>
+
+  <div>
+    <div class="frame">
+      <div class="app-shell">
+        <div class="sidebar"><div class="logo">HD</div></div>
+        <div class="main">
+          <div class="header">
+            <div class="trigger"></div>
+            <div class="right-cluster">
+              <div class="bell-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
+                  <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+                </svg>
+              </div>
+              <div class="avatar-cluster">
+                <div class="avatar">RS</div>
+                <span class="name">Renata Souza</span>
+              </div>
+            </div>
+          </div>
+          <div class="body-fill"></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-caption">Zero — sino sem badge, nunca mostra "0" (ruído visual).</div>
+  </div>
+
+</div>
+</body>
+</html>

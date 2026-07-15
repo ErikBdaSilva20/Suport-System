@@ -13,6 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
+const PROBLEM_CATEGORIES = ['Técnico', 'Atendimento', 'Financeiro', 'Cadastro/Acesso', 'Sem resposta do cliente'];
+const OTHER_CATEGORY = 'outro';
+const CUSTOM_CATEGORY_MAX_WORDS = 5;
+
+function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export default function TicketNewScreen() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,7 +30,8 @@ export default function TicketNewScreen() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TicketPriority>('medium');
-  const [category, setCategory] = useState('');
+  const [categorySelection, setCategorySelection] = useState('');
+  const [customCategory, setCustomCategory] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -48,12 +57,22 @@ export default function TicketNewScreen() {
       setCustomerId(customer.id);
       setShowNewCustomer(false);
       setNewName(''); setNewPhone(''); setNewEmail('');
-      toast({ title: 'Cliente criado e selecionado' });
+      toast({ title: 'Cliente criado e selecionado', variant: 'success' });
     } catch (e: any) {
       toast({ title: 'Erro ao criar cliente', description: e.message, variant: 'destructive' });
     } finally {
       setCreatingCustomer(false);
     }
+  };
+
+  const handleCustomCategoryChange = (value: string) => {
+    if (countWords(value) > CUSTOM_CATEGORY_MAX_WORDS) return;
+    setCustomCategory(value);
+  };
+
+  const handleCategorySelectionChange = (value: string) => {
+    setCategorySelection(value);
+    if (value !== OTHER_CATEGORY) setCustomCategory('');
   };
 
   const handleSubmit = async () => {
@@ -65,10 +84,15 @@ export default function TicketNewScreen() {
       toast({ title: 'Assunto muito curto', variant: 'destructive' });
       return;
     }
+    const category = categorySelection === OTHER_CATEGORY ? customCategory.trim() : categorySelection;
+    if (!category) {
+      toast({ title: 'Escolha o tipo de problema', variant: 'destructive' });
+      return;
+    }
     setSubmitting(true);
     try {
-      const ticket = await createTicket({ customer_id: customerId, subject: subject.trim(), description: description.trim(), priority, category: category.trim() || null });
-      toast({ title: 'Ticket criado', description: `#${ticket.number}` });
+      const ticket = await createTicket({ customer_id: customerId, subject: subject.trim(), description: description.trim(), priority, category });
+      toast({ title: 'Ticket criado', description: `#${ticket.number}`, variant: 'success' });
       navigate(`/tickets/${ticket.id}`);
     } catch (e: any) {
       toast({ title: 'Erro ao criar ticket', description: e.message, variant: 'destructive' });
@@ -125,8 +149,26 @@ export default function TicketNewScreen() {
         </div>
 
         <div className="space-y-2">
-          <Label>Categoria (opcional)</Label>
-          <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="Ex: Acesso, Financeiro, Integração" />
+          <Label>Tipo de problema</Label>
+          <Select value={categorySelection} onValueChange={handleCategorySelectionChange}>
+            <SelectTrigger><SelectValue placeholder="Selecione o tipo de problema" /></SelectTrigger>
+            <SelectContent>
+              {PROBLEM_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              <SelectItem value={OTHER_CATEGORY}>Outro</SelectItem>
+            </SelectContent>
+          </Select>
+          {categorySelection === OTHER_CATEGORY && (
+            <div className="space-y-1 pt-1">
+              <Input
+                value={customCategory}
+                onChange={e => handleCustomCategoryChange(e.target.value)}
+                placeholder="Descreva em até 5 palavras"
+              />
+              <p aria-live="polite" className={`text-xs ${countWords(customCategory) >= CUSTOM_CATEGORY_MAX_WORDS ? 'text-warning font-medium' : 'text-muted-foreground'}`}>
+                {countWords(customCategory)}/{CUSTOM_CATEGORY_MAX_WORDS} palavras{countWords(customCategory) >= CUSTOM_CATEGORY_MAX_WORDS ? ' — limite atingido' : ''}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-2">

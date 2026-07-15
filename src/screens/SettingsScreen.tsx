@@ -40,7 +40,7 @@ export default function SettingsScreen() {
         const created = await createSettings({ company_name: companyName, primary_color: primaryColor });
         setSettings(created);
       }
-      toast({ title: 'Configurações salvas' });
+      toast({ title: 'Configurações salvas', variant: 'success' });
     } catch (e: any) {
       toast({ title: 'Erro ao salvar', description: e.message, variant: 'destructive' });
     } finally {

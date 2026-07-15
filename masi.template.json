@@ -25,6 +25,7 @@
     "allow": [
       "src/screens/**",
       "src/components/**",
+      "src/hooks/**",
       "src/lib/data/*.repo.ts",
       "src/lib/format.ts",
       "src/index.css"

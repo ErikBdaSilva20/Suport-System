@@ -19,11 +19,16 @@ import {
 
 const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
 const STATUS_TONE: Record<string, string> = {
-  open: 'bg-status-open/15 text-status-open border-status-open/30',
-  in_progress: 'bg-status-pending/15 text-status-pending border-status-pending/30',
-  resolved: 'bg-status-resolved/15 text-status-resolved border-status-resolved/30',
+  open: 'bg-status-open text-white border-transparent',
+  in_progress: 'bg-status-pending text-white border-transparent',
+  resolved: 'bg-status-resolved text-white border-transparent',
 };
 const PRIORITY_LABEL: Record<string, string> = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+const PRIORITY_TONE: Record<string, string> = {
+  low: 'bg-priority-low text-white border-transparent',
+  medium: 'bg-priority-medium text-white border-transparent',
+  high: 'bg-priority-high text-white border-transparent',
+};
 
 const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -137,7 +142,7 @@ export default function TicketsScreen() {
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{customersById.get(ticket.customer_id)?.name ?? '—'}</TableCell>
                 <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
-                <TableCell className="text-sm text-muted-foreground">{PRIORITY_LABEL[ticket.priority]}</TableCell>
+                <TableCell><Badge variant="outline" className={PRIORITY_TONE[ticket.priority]}>{PRIORITY_LABEL[ticket.priority]}</Badge></TableCell>
                 <TableCell className="text-sm text-muted-foreground">{ticket.category ?? '—'}</TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{formatDate(ticket.created_at)}</TableCell>
                 {isAdmin && (

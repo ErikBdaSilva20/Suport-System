@@ -12,9 +12,9 @@ import { Badge } from '@/components/ui/badge';
 
 const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
 const STATUS_TONE: Record<string, string> = {
-  open: 'bg-status-open/15 text-status-open border-status-open/30',
-  in_progress: 'bg-status-pending/15 text-status-pending border-status-pending/30',
-  resolved: 'bg-status-resolved/15 text-status-resolved border-status-resolved/30',
+  open: 'bg-status-open text-white border-transparent',
+  in_progress: 'bg-status-pending text-white border-transparent',
+  resolved: 'bg-status-resolved text-white border-transparent',
 };
 
 export default function DashboardScreen() {
@@ -61,24 +61,30 @@ export default function DashboardScreen() {
       <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
+        <Card className="border-status-open/30 bg-status-open/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Abertos</CardTitle>
-            <CircleDot className="h-4 w-4 text-status-open" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-status-open/15">
+              <CircleDot className="h-5 w-5 text-status-open" />
+            </div>
           </CardHeader>
           <CardContent><div className="text-3xl font-bold text-foreground">{counts.open}</div></CardContent>
         </Card>
-        <Card>
+        <Card className="border-status-pending/30 bg-status-pending/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Em atendimento</CardTitle>
-            <Clock className="h-4 w-4 text-status-pending" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-status-pending/15">
+              <Clock className="h-5 w-5 text-status-pending" />
+            </div>
           </CardHeader>
           <CardContent><div className="text-3xl font-bold text-foreground">{counts.in_progress}</div></CardContent>
         </Card>
-        <Card>
+        <Card className="border-status-resolved/30 bg-status-resolved/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Resolvidos</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-status-resolved" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-status-resolved/15">
+              <CheckCircle2 className="h-5 w-5 text-status-resolved" />
+            </div>
           </CardHeader>
           <CardContent><div className="text-3xl font-bold text-foreground">{counts.resolved}</div></CardContent>
         </Card>

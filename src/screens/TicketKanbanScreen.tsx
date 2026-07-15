@@ -21,6 +21,11 @@ const COLUMNS: { status: TicketStatus; label: string; tone: string }[] = [
 ];
 
 const PRIORITY_LABEL: Record<string, string> = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+const PRIORITY_TONE: Record<string, string> = {
+  low: 'bg-priority-low text-white border-transparent',
+  medium: 'bg-priority-medium text-white border-transparent',
+  high: 'bg-priority-high text-white border-transparent',
+};
 
 function KanbanCard({ ticket, customerName, disabled }: { ticket: Ticket; customerName: string; disabled: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: ticket.id, disabled });
@@ -36,7 +41,7 @@ function KanbanCard({ ticket, customerName, disabled }: { ticket: Ticket; custom
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs text-muted-foreground">#{ticket.number}</span>
-        <Badge variant="secondary" className="text-[10px]">{PRIORITY_LABEL[ticket.priority]}</Badge>
+        <Badge variant="outline" className={`text-[10px] ${PRIORITY_TONE[ticket.priority]}`}>{PRIORITY_LABEL[ticket.priority]}</Badge>
       </div>
       <Link to={`/tickets/${ticket.id}`} className="block text-sm font-medium text-foreground hover:text-primary line-clamp-2">
         {ticket.subject}

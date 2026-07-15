@@ -12,6 +12,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
+const STATUS_TONE: Record<string, string> = {
+  open: 'bg-status-open text-white border-transparent',
+  in_progress: 'bg-status-pending text-white border-transparent',
+  resolved: 'bg-status-resolved text-white border-transparent',
+};
 
 export default function CustomerDetailScreen() {
   const { id } = useParams<{ id: string }>();
@@ -90,7 +95,7 @@ export default function CustomerDetailScreen() {
                 <TableCell>
                   <Link to={`/tickets/${ticket.id}`} className="text-sm font-medium text-foreground hover:text-primary">{ticket.subject}</Link>
                 </TableCell>
-                <TableCell><Badge variant="outline">{STATUS_LABEL[ticket.status]}</Badge></TableCell>
+                <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
               </TableRow>
             ))}
             {sortedTickets.length === 0 && (
