@@ -1,1 +1,0 @@
-UPDATE public.tickets SET resolved_at = now() - interval '2 hours' WHERE number = 9;

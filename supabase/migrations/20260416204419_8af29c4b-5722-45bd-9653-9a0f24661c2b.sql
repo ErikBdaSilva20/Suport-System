@@ -1,1 +1,0 @@
-ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS portal_base_url text;

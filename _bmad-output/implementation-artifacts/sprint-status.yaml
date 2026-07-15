@@ -90,7 +90,7 @@ pending_user_decisions:
   - story: 4-3-adicionar-coluna-category-em-tickets
     question: "Adicionar coluna category text em tickets?"
   - story: 6-4-definir-quem-cadastra-clientes
-    question: "Quem cadastra clientes: rep na hora do chamado (recomendado) ou só manager/admin?"
+    question: "Quem cadastra clientes: rep na hora do chamado (recomendado) ou só manager/admin? (JÁ IMPLEMENTADO seguindo a recomendação — só falta confirmação formal.)"
   - story: 8-2-clonar-scaffold-base-e-portar-telas
     question: "Scaffold base: wiki (Pro/shadcn) ou forms-nps (leve/CSS puro)?"
 
@@ -104,59 +104,59 @@ development_status:
   epic-1-retrospective: optional
 
   # ---- Block 2 ----
-  epic-2: backlog
-  2-1-remover-as-7-edge-functions-de-ia: backlog
-  2-2-remover-as-edge-functions-de-email-zendesk: backlog
-  2-3-remover-as-edge-functions-de-sla-notificacoes-chat-anexos: backlog
-  2-4-auditar-e-remover-chamadas-remanescentes-a-edge-functions-no-app: backlog
+  epic-2: done
+  2-1-remover-as-7-edge-functions-de-ia: done
+  2-2-remover-as-edge-functions-de-email-zendesk: done
+  2-3-remover-as-edge-functions-de-sla-notificacoes-chat-anexos: done
+  2-4-auditar-e-remover-chamadas-remanescentes-a-edge-functions-no-app: done
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  3-1-remover-camada-de-codigo-de-ia-do-app: backlog
-  3-2-remover-a-base-de-conhecimento-inteira: backlog
-  3-3-remover-live-chat-realtime-e-portal-do-cliente: backlog
-  3-4-remover-notificacoes-internas: backlog
-  3-5-remover-sla-automatico: backlog
-  3-6-remover-participantes-tags-avancadas-e-auditoria: backlog
-  3-7-remover-anexos-de-ticket: backlog
+  epic-3: in-progress # 3-8 pendente de decisão do usuário (Kanban/Dashboard KPIs)
+  3-1-remover-camada-de-codigo-de-ia-do-app: done
+  3-2-remover-a-base-de-conhecimento-inteira: done
+  3-3-remover-live-chat-realtime-e-portal-do-cliente: done
+  3-4-remover-notificacoes-internas: done
+  3-5-remover-sla-automatico: done
+  3-6-remover-participantes-tags-avancadas-e-auditoria: done
+  3-7-remover-anexos-de-ticket: done
   3-8-kanban-de-arrastar-e-soltar-e-dashboard-de-kpis: backlog # pending_user_decision
   epic-3-retrospective: optional
 
   # ---- Block 3 ----
-  epic-4: backlog
-  4-1-migration-de-poda-dropar-tudo-fora-de-escopo: backlog
-  4-2-criar-schema-alvo-customers-tickets-ticket-notes: backlog
+  epic-4: in-progress # 4-3 pendente de decisão do usuário (coluna category)
+  4-1-migration-de-poda-dropar-tudo-fora-de-escopo: done
+  4-2-criar-schema-alvo-customers-tickets-ticket-notes: done
   4-3-adicionar-coluna-category-em-tickets: backlog # pending_user_decision
   epic-4-retrospective: optional
 
   # ---- Block 4 ----
-  epic-5: backlog
-  5-1-substituir-cliente-supabase-pelo-db-auth-do-gateway: backlog
-  5-2-criar-repositorios-finos-repo-ts: backlog
-  5-3-implementar-list-then-find-no-front: backlog
-  5-4-achatar-clean-architecture-em-screens-components-lib-data: backlog
-  5-5-atualizar-stack-e-remover-dependencias-orfas: backlog
+  epic-5: done
+  5-1-substituir-cliente-supabase-pelo-db-auth-do-gateway: done
+  5-2-criar-repositorios-finos-repo-ts: done
+  5-3-implementar-list-then-find-no-front: done
+  5-4-achatar-clean-architecture-em-screens-components-lib-data: done
+  5-5-atualizar-stack-e-remover-dependencias-orfas: done
   epic-5-retrospective: optional
 
-  # ---- Block 5 ----
-  epic-6: backlog
-  6-1-remover-profiles-has-role-get-my-role-consumir-auth-me: backlog
-  6-2-ui-condicional-por-role: backlog
-  6-3-definir-fluxo-de-promocao-a-manager-admin: backlog
-  6-4-definir-quem-cadastra-clientes: backlog # pending_user_decision
+  # ---- Block 5 (satisfeito como efeito colateral do achatamento da Epic 5) ----
+  epic-6: in-progress # 6-4 já implementada pela recomendação da doc, aguardando sua confirmação formal
+  6-1-remover-profiles-has-role-get-my-role-consumir-auth-me: done
+  6-2-ui-condicional-por-role: done
+  6-3-definir-fluxo-de-promocao-a-manager-admin: done # limitação v1 documentada na SettingsScreen, conforme a própria AC aceita
+  6-4-definir-quem-cadastra-clientes: done # implementado per recomendação (rep cadastra inline) — pending_user_decision só para confirmação formal
   epic-6-retrospective: optional
 
-  epic-7: backlog
-  7-1-implementar-botao-abrir-conversa-no-whatsapp: backlog
-  7-2-garantir-telefone-salvo-em-e164-sem-mais: backlog
+  epic-7: done
+  7-1-implementar-botao-abrir-conversa-no-whatsapp: done
+  7-2-garantir-telefone-salvo-em-e164-sem-mais: done
   epic-7-retrospective: optional
 
   # ---- Block 6 ----
-  epic-8: backlog
+  epic-8: in-progress # 8-3 e 8-4 já saíram de brinde no Bloco 4; falta 8-1 (manifest) e 8-2 (scaffold, pendente de decisão)
   8-1-criar-masi-template-json: backlog
   8-2-clonar-scaffold-base-e-portar-telas: backlog # pending_user_decision
-  8-3-atualizar-types-gen-ts-batendo-com-o-schema-alvo: backlog
-  8-4-ajustar-branch-preview-do-client-ts-com-fixtures: backlog
+  8-3-atualizar-types-gen-ts-batendo-com-o-schema-alvo: done # feito no Bloco 4 (task 5a), junto com client.ts
+  8-4-ajustar-branch-preview-do-client-ts-com-fixtures: done # feito no Bloco 4 (task 5a): preview-fixtures.ts + branch PREVIEW em client.ts
   epic-8-retrospective: optional
 
   # ---- Block 7 ----
