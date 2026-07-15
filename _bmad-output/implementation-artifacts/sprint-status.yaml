@@ -159,9 +159,16 @@ development_status:
   epic-8-retrospective: optional
 
   # ---- Block 7 ----
-  epic-9: backlog
-  9-1-build-limpo-antes-do-publish: backlog
-  9-2-publicar-o-template-com-gateway-https-publico: backlog
-  9-3-registrar-no-catalogo-e-redeploy-do-fly: backlog
-  9-4-qa-end-to-end-do-fluxo-completo: backlog
+  epic-9: in-progress # 9-1 concluído; 9-2/9-3/9-4 dependem de acesso ao masi-tenant-gateway/Fly/Cloudflare e ao repo clone-templates (mesmo bloqueio da 8-2), fora deste workspace
+  9-1-build-limpo-antes-do-publish: done # tsc --noEmit e vite build limpos com strict/noUnusedLocals ativados (ver nota abaixo); vitest passando
+  9-2-publicar-o-template-com-gateway-https-publico: backlog # requer acesso ao gateway https público e ao pipeline de publish (fora deste workspace)
+  9-3-registrar-no-catalogo-e-redeploy-do-fly: backlog # requer acesso ao repo masi-ai-orquestration e ao Fly (fora deste workspace)
+  9-4-qa-end-to-end-do-fluxo-completo: backlog # depende de 9-2/9-3 (clone real via hub)
   epic-9-retrospective: optional
+
+# Nota técnica 2026-07-15: tsconfig.json/tsconfig.app.json/tsconfig.node.json tinham
+# strict/noImplicitAny/noUnusedLocals/noUnusedParameters desligados (herdado do
+# boilerplate lovable original) — violava NFR9/Importantdoc.md#B3 apesar da Story 5.5
+# ter sido marcada 'done'. Corrigido na Story 9.1: strict ativado nos 3 tsconfigs,
+# único erro real era src/components/ui/calendar.tsx (props não usadas no IconLeft/
+# IconRight do react-day-picker) — corrigido. tsc --noEmit e vite build limpos.
