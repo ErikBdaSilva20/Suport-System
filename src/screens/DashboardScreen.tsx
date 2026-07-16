@@ -1,11 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CircleDot, Clock, CheckCircle2 } from 'lucide-react';
-import { listTickets } from '@/lib/data/tickets.repo';
-import { listCustomers } from '@/lib/data/customers.repo';
-import type { Ticket } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
-import { useToast } from '@/hooks/use-toast';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -18,17 +14,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function DashboardScreen() {
-  const { toast } = useToast();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([listTickets(), listCustomers()])
-      .then(([t, c]) => { setTickets(t); setCustomers(c); })
-      .catch((e: any) => toast({ title: 'Erro ao carregar dashboard', description: e.message, variant: 'destructive' }))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { tickets, customers, isLoading } = useTicketsAndCustomers();
 
   const customersById = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
 

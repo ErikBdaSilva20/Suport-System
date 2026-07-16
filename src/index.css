@@ -6,87 +6,87 @@
 
 @layer base {
   :root {
-    /* ── Base ── */
+    /* ── Base (Event Hub palette) ── */
     --background: 0 0% 93%;
-    --foreground: 213 96% 9%;
+    --foreground: 155 45% 9%;
 
     --card: 0 0% 98%;
-    --card-foreground: 213 96% 9%;
+    --card-foreground: 155 45% 9%;
 
     --popover: 0 0% 98%;
-    --popover-foreground: 213 96% 9%;
+    --popover-foreground: 155 45% 9%;
 
-    --primary: 213 96% 9%;
+    --primary: 155 77% 43%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 213 96% 9%;
+    --secondary-foreground: 155 45% 9%;
 
     --muted: 0 0% 89%;
-    --muted-foreground: 213 40% 30%;
+    --muted-foreground: 155 15% 35%;
 
-    --accent: 239 84% 67%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 187 91% 56%;
+    --accent-foreground: 155 45% 9%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 351 100% 68%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
+    --success: 155 77% 43%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 43 96% 56%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 36 100% 64%;
+    --warning-foreground: 155 45% 9%;
 
     --border: 0 0% 82%;
     --input: 0 0% 82%;
-    --ring: 239 84% 67%;
+    --ring: 187 91% 56%;
 
     --radius: 0.625rem;
 
-    /* ── Sidebar ── */
-    --sidebar-background: 213 96% 6%;
-    --sidebar-foreground: 250 15% 75%;
-    --sidebar-primary: 239 84% 67%;
+    /* ── Sidebar (soft emerald) ── */
+    --sidebar-background: 155 25% 20%;
+    --sidebar-foreground: 150 15% 85%;
+    --sidebar-primary: 155 55% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 96% 12%;
+    --sidebar-accent: 155 22% 26%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 250 15% 20%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-border: 155 20% 16%;
+    --sidebar-ring: 155 55% 45%;
 
     /* ── Misc ── */
-    --dark-bg: 213 96% 9%;
-    --progress-active: 239 84% 67%;
-    --progress-inactive: 250 15% 25%;
+    --dark-bg: 155 25% 20%;
+    --progress-active: 187 91% 56%;
+    --progress-inactive: 0 0% 82%;
 
     /* ── Design System Backgrounds ── */
     --bg-base: 0 0% 93%;
     --bg-surface-1: 0 0% 96%;
     --bg-surface-2: 0 0% 89%;
     --bg-elevated: 0 0% 98%;
-    --bg-subtle-accent: 213 10% 92%;
-    --bg-dark: 213 96% 9%;
-    --bg-darkest: 213 96% 6%;
+    --bg-subtle-accent: 155 15% 91%;
+    --bg-dark: 155 25% 20%;
+    --bg-darkest: 155 30% 14%;
 
     /* ── Design System Text ── */
-    --text-primary: 213 96% 9%;
-    --text-secondary: 213 40% 30%;
-    --text-tertiary: 213 20% 50%;
-    --text-on-dark: 240 20% 95%;
-    --text-on-dark-muted: 240 10% 70%;
+    --text-primary: 155 45% 9%;
+    --text-secondary: 155 15% 35%;
+    --text-tertiary: 155 10% 50%;
+    --text-on-dark: 150 15% 92%;
+    --text-on-dark-muted: 150 10% 70%;
 
     /* ── Design System Accents ── */
-    --accent-primary: 239 84% 67%;
-    --accent-primary-hover: 244 80% 58%;
-    --accent-primary-light: 234 89% 74%;
-    --accent-warm: 43 96% 56%;
-    --accent-success: 160 84% 39%;
+    --accent-primary: 187 91% 56%;
+    --accent-primary-hover: 187 85% 46%;
+    --accent-primary-light: 187 100% 71%;
+    --accent-warm: 36 100% 64%;
+    --accent-success: 155 77% 43%;
 
     /* ── Design System Borders ── */
     --border-default: 0 0% 82%;
     --border-subtle: 0 0% 87%;
 
     /* ── Design System Shadows ── */
-    --shadow-color: 213 96% 9%;
+    --shadow-color: 155 45% 9%;
 
     /* ── HelpDesk Status Colors ── */
     --status-open: 210 100% 56%;
@@ -103,91 +103,6 @@
     --priority-low: 240 5% 50%;
 
     /* ── HelpDesk SLA Colors ── */
-    --sla-ok: 142 71% 45%;
-    --sla-warning: 45 93% 47%;
-    --sla-breached: 0 84% 60%;
-  }
-
-  .dark {
-    --background: 220 20% 8%;
-    --foreground: 210 20% 92%;
-
-    --card: 220 18% 11%;
-    --card-foreground: 210 20% 92%;
-
-    --popover: 220 18% 11%;
-    --popover-foreground: 210 20% 92%;
-
-    --primary: 210 60% 70%;
-    --primary-foreground: 220 20% 8%;
-
-    --secondary: 220 16% 15%;
-    --secondary-foreground: 210 20% 92%;
-
-    --muted: 220 16% 15%;
-    --muted-foreground: 210 10% 55%;
-
-    --accent: 210 60% 70%;
-    --accent-foreground: 220 20% 8%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 220 14% 20%;
-    --input: 220 14% 20%;
-    --ring: 210 60% 70%;
-
-    --sidebar-background: 220 20% 6%;
-    --sidebar-foreground: 210 10% 55%;
-    --sidebar-primary: 210 60% 70%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 16% 15%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 14% 20%;
-    --sidebar-ring: 210 60% 70%;
-
-    /* ── Design System Backgrounds (Dark) ── */
-    --bg-base: 220 20% 8%;
-    --bg-surface-1: 220 18% 11%;
-    --bg-surface-2: 220 16% 15%;
-    --bg-elevated: 220 18% 13%;
-    --bg-subtle-accent: 220 20% 15%;
-    --bg-dark: 220 20% 6%;
-    --bg-darkest: 220 22% 4%;
-
-    /* ── Design System Text (Dark) ── */
-    --text-primary: 210 20% 92%;
-    --text-secondary: 210 10% 55%;
-    --text-tertiary: 210 8% 42%;
-    --text-on-dark: 210 20% 92%;
-    --text-on-dark-muted: 210 10% 55%;
-
-    /* ── Design System Accents (Dark) ── */
-    --accent-primary: 210 60% 70%;
-    --accent-primary-hover: 210 60% 78%;
-    --accent-primary-light: 210 50% 80%;
-    --accent-warm: 43 96% 65%;
-    --accent-success: 160 84% 45%;
-
-    /* ── Design System Borders (Dark) ── */
-    --border-default: 220 14% 20%;
-    --border-subtle: 220 12% 16%;
-
-    /* ── HelpDesk Status Colors (Dark - same vibrant) ── */
-    --status-open: 210 100% 56%;
-    --status-pending: 45 93% 47%;
-    --status-in-progress: 187 92% 45%;
-    --status-waiting: 270 60% 55%;
-    --status-resolved: 142 71% 45%;
-    --status-closed: 240 5% 45%;
-
-    /* ── HelpDesk Priority Colors (Dark) ── */
-    --priority-urgent: 0 84% 60%;
-    --priority-high: 25 95% 53%;
-    --priority-medium: 210 100% 56%;
-    --priority-low: 240 5% 50%;
-
-    /* ── HelpDesk SLA Colors (Dark) ── */
     --sla-ok: 142 71% 45%;
     --sla-warning: 45 93% 47%;
     --sla-breached: 0 84% 60%;

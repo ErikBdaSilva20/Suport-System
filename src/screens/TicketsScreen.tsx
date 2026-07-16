@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Trash2, LayoutGrid } from 'lucide-react';
-import { listTickets, deleteTicket } from '@/lib/data/tickets.repo';
-import { listCustomers } from '@/lib/data/customers.repo';
+import { deleteTicket } from '@/lib/data/tickets.repo';
 import type { Ticket } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -35,38 +34,29 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day:
 export default function TicketsScreen() {
   const { session } = useAuth();
   const { toast } = useToast();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { tickets, customers, isLoading, reload } = useTicketsAndCustomers();
   const [search, setSearch] = useState('');
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const isAdmin = session?.role === 'admin';
-
-  const load = async () => {
-    setIsLoading(true);
-    try {
-      const [t, c] = await Promise.all([listTickets(), listCustomers()]);
-      setTickets(t);
-      setCustomers(c);
-    } catch (e: any) {
-      toast({ title: 'Erro ao carregar tickets', description: e.message, variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
+  const isRep = session?.role === 'rep';
 
   const customersById = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tickets
-      .filter(t => !q || t.subject.toLowerCase().includes(q) || customersById.get(t.customer_id)?.name.toLowerCase().includes(q))
+      .filter(t => !q
+        || t.category?.toLowerCase().includes(q)
+        || t.subject.toLowerCase().includes(q)
+        || customersById.get(t.customer_id)?.name.toLowerCase().includes(q))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [tickets, search, customersById]);
+
+  // Cliente e a coluna de exclusão não fazem sentido pro rep (a lista já é só
+  // dele, e ele não exclui chamados) — colSpan do "vazio" acompanha isso.
+  const columnCount = 6 + (isRep ? 0 : 1) + (isAdmin ? 1 : 0);
 
   const handleDelete = async () => {
     if (!ticketToDelete) return;
@@ -75,7 +65,7 @@ export default function TicketsScreen() {
       await deleteTicket(ticketToDelete.id);
       toast({ title: `Ticket #${ticketToDelete.number} excluído` });
       setTicketToDelete(null);
-      await load();
+      await reload();
     } catch (e: any) {
       toast({ title: 'Erro ao excluir', description: e.message, variant: 'destructive' });
     } finally {
@@ -97,22 +87,29 @@ export default function TicketsScreen() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tickets</h1>
-          <p className="text-sm text-muted-foreground mt-1">{filtered.length} tickets</p>
+          <h1 className="text-2xl font-bold text-foreground">{isRep ? 'Meus Chamados' : 'Tickets'}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isRep ? `${filtered.length} chamados no seu histórico` : `${filtered.length} tickets`}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild className="gap-2">
-            <Link to="/tickets/kanban"><LayoutGrid className="h-4 w-4" /> Ver como Kanban</Link>
-          </Button>
+          {!isRep && (
+            <Button variant="outline" asChild className="gap-2">
+              <Link to="/tickets/kanban"><LayoutGrid className="h-4 w-4" /> Ver como Kanban</Link>
+            </Button>
+          )}
           <Button asChild className="gap-2">
-            <Link to="/tickets/new"><Plus className="h-4 w-4" /> Novo Ticket</Link>
+            <Link to="/tickets/new"><Plus className="h-4 w-4" /> {isRep ? 'Abrir chamado' : 'Novo Ticket'}</Link>
           </Button>
         </div>
       </div>
 
       <div className="relative w-64">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Buscar tickets..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        <Input
+          placeholder={isRep ? 'Buscar por categoria ou assunto...' : 'Buscar por categoria, assunto ou cliente...'}
+          className="pl-9" value={search} onChange={e => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="rounded-lg border border-border bg-card">
@@ -121,7 +118,7 @@ export default function TicketsScreen() {
             <TableRow>
               <TableHead className="w-16">#</TableHead>
               <TableHead>Assunto</TableHead>
-              <TableHead>Cliente</TableHead>
+              {!isRep && <TableHead>Cliente</TableHead>}
               <TableHead>Status</TableHead>
               <TableHead>Prioridade</TableHead>
               <TableHead>Categoria</TableHead>
@@ -136,11 +133,16 @@ export default function TicketsScreen() {
                   <Link to={`/tickets/${ticket.id}`} className="font-mono text-xs text-muted-foreground">{ticket.number}</Link>
                 </TableCell>
                 <TableCell>
-                  <Link to={`/tickets/${ticket.id}`} className="text-sm font-medium text-foreground hover:text-primary line-clamp-1">
-                    {ticket.subject}
+                  <Link to={`/tickets/${ticket.id}`} className="block hover:text-primary">
+                    <span className="text-sm font-medium text-foreground line-clamp-1">{ticket.subject}</span>
+                    {isRep && ticket.description && (
+                      <span className="block text-xs text-muted-foreground line-clamp-1 mt-0.5">{ticket.description}</span>
+                    )}
                   </Link>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{customersById.get(ticket.customer_id)?.name ?? '—'}</TableCell>
+                {!isRep && (
+                  <TableCell className="text-sm text-muted-foreground">{customersById.get(ticket.customer_id)?.name ?? '—'}</TableCell>
+                )}
                 <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
                 <TableCell><Badge variant="outline" className={PRIORITY_TONE[ticket.priority]}>{PRIORITY_LABEL[ticket.priority]}</Badge></TableCell>
                 <TableCell className="text-sm text-muted-foreground">{ticket.category ?? '—'}</TableCell>
@@ -159,7 +161,7 @@ export default function TicketsScreen() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={columnCount} className="text-center text-sm text-muted-foreground py-8">
                   Nenhum ticket encontrado.
                 </TableCell>
               </TableRow>

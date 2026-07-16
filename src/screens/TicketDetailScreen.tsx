@@ -161,7 +161,7 @@ export default function TicketDetailScreen() {
           </div>
 
           <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notas internas</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{isRep ? 'Notas do problema' : 'Notas internas'}</h2>
             {notes.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma nota ainda.</p>}
             {notes.map(note => (
               <div key={note.id} className="rounded-md border border-status-pending/30 bg-status-pending/5 p-3">

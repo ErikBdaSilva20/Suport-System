@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Ticket, Users, Settings, LogOut, Bell } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent,
   SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useOpenTicketsBadge } from '@/hooks/use-open-tickets-badge';
+import { getNavItems } from '@/lib/nav-items';
 
 function NotificationBell() {
   const { session } = useAuth();
@@ -36,13 +37,6 @@ function NotificationBell() {
   );
 }
 
-const navItems = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Tickets', url: '/tickets', icon: Ticket },
-  { title: 'Clientes', url: '/customers', icon: Users },
-  { title: 'Configurações', url: '/settings', icon: Settings, adminOnly: true },
-];
-
 function AppSidebarContent() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
@@ -54,7 +48,7 @@ function AppSidebarContent() {
     navigate('/login');
   };
 
-  const visibleItems = navItems.filter(item => !item.adminOnly || session?.role === 'admin');
+  const visibleItems = getNavItems(session?.role);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">

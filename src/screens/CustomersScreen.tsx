@@ -1,28 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Building2 } from 'lucide-react';
-import { listCustomers } from '@/lib/data/customers.repo';
-import { listTickets } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
-import type { Ticket } from '@/lib/data/tickets.repo';
-import { useToast } from '@/hooks/use-toast';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CustomersScreen() {
-  const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { customers, tickets, isLoading } = useTicketsAndCustomers();
   const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    Promise.all([listCustomers(), listTickets()])
-      .then(([c, t]) => { setCustomers(c); setTickets(t); })
-      .catch(e => toast({ title: 'Erro ao carregar clientes', description: e.message, variant: 'destructive' }))
-      .finally(() => setIsLoading(false));
-  }, []);
 
   const ticketCountByCustomer = useMemo(() => {
     const map = new Map<string, number>();

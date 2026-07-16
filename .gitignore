@@ -32,3 +32,6 @@ _bmad
 
 # Handoff interno — gitignorado por enquanto (a pedido)
 HANDOFF-PAPEIS-STATUS.md
+
+# Credenciais de teste local (Docker) — nunca committar, mesmo sendo fake
+LOGINS-TESTE-LOCAL.md

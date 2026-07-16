@@ -10,7 +10,13 @@ const COOKIE_NAME = 'hd_session';
 const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function cookieOptions() {
-  return { httpOnly: true, sameSite: 'lax', secure: false, signed: true, maxAge: COOKIE_MAX_AGE_MS };
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false,
+    signed: true,
+    maxAge: COOKIE_MAX_AGE_MS,
+  };
 }
 
 // Anexa req.user = { id, name, email, role } lendo o cookie de sessão e revalidando
@@ -19,7 +25,9 @@ function cookieOptions() {
 export async function loadSession(req, _res, next) {
   const userId = req.signedCookies[COOKIE_NAME];
   if (!userId) return next();
-  const { rows } = await pool.query('select id, name, email, role from "user" where id = $1', [userId]);
+  const { rows } = await pool.query('select id, name, email, role from "user" where id = $1', [
+    userId,
+  ]);
   req.user = rows[0] ?? null;
   next();
 }
@@ -47,20 +55,31 @@ authRouter.post('/sign-up/email', async (req, res) => {
   // de tenant por um cliente externo. O cadastro de equipe (intent ausente/'staff')
   // só serve pra virar o 1º admin; depois disso fica fechado — novos funcionários
   // são criados pelo admin (ver /admin/create-user), não por autocadastro.
+  //
+  // O gate conta só admins, não qualquer usuário: se um cliente se autocadastra
+  // antes de qualquer funcionário, o tenant não pode ficar travado sem admin.
   let role;
   if (intent === 'customer') {
     role = 'rep';
   } else {
-    const countResult = await pool.query('select count(*)::int as count from "user"');
+    const countResult = await pool.query(
+      'select count(*)::int as count from "user" where role = $1',
+      ['admin']
+    );
     if (countResult.rows[0].count > 0) {
-      return res.status(403).type('text/plain').send('Cadastro de equipe fechado — peça a um administrador para criar sua conta em Configurações.');
+      return res
+        .status(403)
+        .type('text/plain')
+        .send(
+          'Cadastro de equipe fechado — peça a um administrador para criar sua conta em Configurações.'
+        );
     }
     role = 'admin';
   }
 
   const { rows } = await pool.query(
     'insert into "user" (name, email, password, role) values ($1, $2, $3, $4) returning id',
-    [name, email, password, role],
+    [name, email, password, role]
   );
 
   res.cookie(COOKIE_NAME, rows[0].id, cookieOptions());
@@ -72,7 +91,7 @@ authRouter.post('/sign-in/email', async (req, res) => {
   const { rows } = await pool.query('select id, password from "user" where email = $1', [email]);
   const user = rows[0];
   if (!user || user.password !== password) {
-    return res.status(401).type('text/plain').send('Credenciais inválidas.');
+    return res.status(401).type('text/plain').send('Email ou senha inválidos.');
   }
 
   res.cookie(COOKIE_NAME, user.id, cookieOptions());
@@ -94,12 +113,18 @@ authRouter.get('/me', (req, res) => {
 // gerada só existe nesta resposta; não fica em log nem é reenviada depois.
 authRouter.post('/admin/create-user', async (req, res) => {
   if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).type('text/plain').send('Só administradores podem criar contas de funcionário.');
+    return res
+      .status(403)
+      .type('text/plain')
+      .send('Só administradores podem criar contas de funcionário.');
   }
 
   const { name, email, role } = req.body ?? {};
   if (!name || !email || role !== 'manager') {
-    return res.status(400).type('text/plain').send('Nome, e-mail e papel (manager) são obrigatórios.');
+    return res
+      .status(400)
+      .type('text/plain')
+      .send('Nome, e-mail e papel (manager) são obrigatórios.');
   }
 
   const existing = await pool.query('select id from "user" where email = $1', [email]);
@@ -110,7 +135,7 @@ authRouter.post('/admin/create-user', async (req, res) => {
   const temporaryPassword = generateTemporaryPassword();
   const { rows } = await pool.query(
     'insert into "user" (name, email, password, role) values ($1, $2, $3, $4) returning id, name, email',
-    [name, email, temporaryPassword, role],
+    [name, email, temporaryPassword, role]
   );
 
   res.status(201).json({ user: rows[0], role, temporaryPassword });

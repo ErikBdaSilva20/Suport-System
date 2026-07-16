@@ -39,6 +39,8 @@ FR7: Rep/manager/admin cadastra um cliente (nome, telefone E.164, e-mail opciona
 FR8: Manager/admin lista e visualiza detalhes de clientes cadastrados.
 FR9: Admin configura nome da empresa e cor primária em `/settings`.
 FR10: O 1º usuário do tenant vira admin automaticamente; os demais entram como `rep`; admin promove alguém a `manager`.
+FR11: Rep, ao logar, acessa direto uma tela enxuta "Meus Chamados" (só os próprios tickets + botão "Abrir chamado") — sem Dashboard/KPIs, Kanban nem Clientes no menu.
+FR12: Apenas admin edita ou exclui um cadastro de cliente; manager visualiza e cria clientes normalmente (fluxo manual de abertura de chamado).
 
 ### NonFunctional Requirements
 
@@ -75,6 +77,8 @@ NFR10: `masi.template.json` declara `engine: "vite-react-gateway"`, `envContract
 | NFR5 | Epic 2, Epic 3 |
 | NFR6 | Epic 2, Epic 3, Epic 7 |
 | NFR9, NFR10 | Epic 8 |
+| FR11 | Epic 10 |
+| FR12 | Epic 10 |
 
 ## Epic List
 
@@ -87,6 +91,7 @@ NFR10: `masi.template.json` declara `engine: "vite-react-gateway"`, `envContract
 7. Fluxo WhatsApp (substitui e-mail/chat com cliente)
 8. Manifest do template e contrato do hub
 9. Publish, catálogo e QA end-to-end
+10. Telas por papel (Admin / Manager / Cliente)
 
 ---
 
@@ -714,6 +719,80 @@ para confirmar que a migração está completa e segura.
 **And** se o rep tentar `PATCH /data/tickets/:id` de um ticket que não é dele, o gateway responde `403`
 
 [Source: doc/08-plano-de-migracao.md#Passo 7]
+
+---
+
+## Epic 10: Telas por papel (Admin / Manager / Cliente)
+
+O Epic 6 já diferenciou papéis em nível de *botão* (Atender/Concluir/WhatsApp escondidos do rep, exclusão de ticket só admin, `/settings` só admin). O que falta é a diferenciação em nível de *tela/navegação*: hoje o rep (cliente) enxerga o mesmo menu de manager/admin — Dashboard com KPIs, Tickets, Kanban e Clientes — o que não faz sentido pra quem só deveria abrir e acompanhar o próprio chamado. Este epic fecha essa lacuna.
+
+**Decisão confirmada pelo usuário:** não existirão três componentes de tela separados (`AdminScreen`/`ManagerScreen`/`ClientScreen`). Manager e admin continuam nas mesmas telas (`DashboardScreen`, `TicketsScreen`, `TicketKanbanScreen`, `CustomersScreen`), diferenciadas por condicionais de `role` — o mesmo padrão já usado em `TicketsScreen.tsx:45` (`isAdmin`) e `TicketDetailScreen.tsx:58` (`isRep`). O rep ganha uma navegação própria, bem mais enxuta, reaproveitando a `TicketsScreen`/`TicketNewScreen` existentes.
+
+**Decisão confirmada pelo usuário:** além do que já existe (Configurações e exclusão de ticket só admin), editar/excluir cliente também passa a ser admin-only — `CustomersScreen.tsx` hoje não tem nenhuma trava de `role`.
+
+### Story 10.1: Menu do rep mostra só "Meus Chamados"
+
+Como cliente (rep) logado,
+quero ver no menu lateral só um item levando aos meus chamados — sem Dashboard, Kanban ou Clientes,
+para não me deparar com telas de gestão que não são pra mim.
+
+**Acceptance Criteria:**
+
+**Given** `navItems` em `src/components/AppLayout.tsx:39-44` (Dashboard, Tickets, Clientes, Configurações com `adminOnly`)
+**When** `session.role === 'rep'`
+**Then** o menu lateral mostra só um item ("Meus Chamados", apontando para a lista de tickets do próprio rep)
+**And** Dashboard, Kanban e Clientes não aparecem no menu do rep
+**And** manager/admin continuam vendo o menu completo (exceto Configurações, que já é admin-only) sem nenhuma regressão
+
+[Source: src/components/AppLayout.tsx#39-57; doc/07-papeis-rep-manager-admin.md#7.3]
+
+### Story 10.2: Rotas de gestão bloqueadas para rep por URL direta
+
+Como desenvolvedor,
+quero que `/dashboard` e `/tickets/kanban` rejeitem acesso de um rep mesmo digitando a URL direto,
+para que a restrição de menu (Story 10.1) não seja só cosmética.
+
+**Acceptance Criteria:**
+
+**Given** as rotas em `src/App.tsx:31-40` (hoje só `RequireAuth` genérico + `RequireAdmin` em `/settings`)
+**When** um usuário com `role === 'rep'` acessa `/dashboard` ou `/tickets/kanban` diretamente pela URL
+**Then** ele é redirecionado para a tela de "Meus Chamados" (mesmo destino da Story 10.3)
+**And** manager/admin continuam acessando `/dashboard` e `/tickets/kanban` normalmente
+**And** a implementação segue o mesmo padrão de `RequireAdmin` já existente em `src/lib/auth.tsx:61-76` (ex: novo `RequireStaff` que redireciona `role === 'rep'`)
+
+[Source: src/App.tsx#31-40; src/lib/auth.tsx#61-76]
+
+### Story 10.3: Home do rep = lista dos próprios chamados + botão "Abrir chamado"
+
+Como cliente (rep),
+quero pousar direto numa lista dos meus próprios chamados com destaque para abrir um novo,
+para resolver meu problema sem precisar entender dashboard ou kanban.
+
+**Acceptance Criteria:**
+
+**Given** que `/tickets` (`TicketsScreen`) já lista tickets e o gateway já filtra por `owner_id` para o rep (doc/07-papeis-rep-manager-admin.md#7.2 — "a UI não precisa filtrar por owner")
+**When** um rep loga
+**Then** ele é direcionado para essa lista (não mais para `/dashboard`, que hoje é o destino fixo da rota `/` em `src/App.tsx:30`) já com um botão "Abrir chamado" em destaque
+**And** colunas/rótulos que só fazem sentido em visão de equipe (ex: "Atribuído a") ficam ocultos para o rep, já que a lista é sempre só dele
+**And** a rota raiz pós-login passa a depender do `role`: rep vai para a lista de chamados, manager/admin continuam indo para `/dashboard`
+
+[Source: src/App.tsx#28-40; src/screens/TicketsScreen.tsx; doc/07-papeis-rep-manager-admin.md#7.2]
+
+### Story 10.4: Editar/excluir cliente restrito a admin
+
+Como admin,
+quero ser o único papel que edita ou exclui um cadastro de cliente,
+para evitar que manager altere ou apague um contato por engano.
+
+**Acceptance Criteria:**
+
+**Given** `src/screens/CustomersScreen.tsx` e `CustomerDetailScreen.tsx`, hoje sem nenhuma checagem de `role`
+**When** `session.role !== 'admin'` (ou seja, manager)
+**Then** as ações de editar e excluir cliente não aparecem na lista nem no detalhe — mesmo padrão `isAdmin` já usado em `src/screens/TicketsScreen.tsx:45,129,148`
+**And** manager continua podendo visualizar a lista completa de clientes e criar um novo (necessário para o fluxo manual de abertura de chamado, doc/07-papeis-rep-manager-admin.md#7.4)
+**And** admin mantém acesso total (ver, criar, editar, excluir)
+
+[Source: src/screens/CustomersScreen.tsx; src/screens/TicketsScreen.tsx#45,129,148; doc/07-papeis-rep-manager-admin.md#7.4]
 
 ---
 

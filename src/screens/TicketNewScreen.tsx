@@ -44,10 +44,10 @@ export default function TicketNewScreen() {
   const [creatingCustomer, setCreatingCustomer] = useState(false);
 
   // Fallback pra conta rep legada, cadastrada antes do cliente virar rep (sem
-  // registro em customers ainda) — completa o próprio contato na hora.
+  // registro em customers ainda) — o nome/telefone entram junto no mesmo
+  // envio do ticket, não como uma etapa separada bloqueando o resto do form.
   const [ownName, setOwnName] = useState('');
   const [ownPhone, setOwnPhone] = useState('');
-  const [creatingOwnCustomer, setCreatingOwnCustomer] = useState(false);
 
   useEffect(() => {
     listCustomers()
@@ -61,24 +61,6 @@ export default function TicketNewScreen() {
   useEffect(() => {
     if (session?.user.name) setOwnName(session.user.name);
   }, [session?.user.name]);
-
-  const handleCreateOwnCustomer = async () => {
-    if (!ownName.trim() || !ownPhone.trim()) {
-      toast({ title: 'Nome e telefone são obrigatórios', variant: 'destructive' });
-      return;
-    }
-    setCreatingOwnCustomer(true);
-    try {
-      const customer = await createCustomer({ name: ownName.trim(), phone_e164: ownPhone.replace(/\D/g, ''), email: session?.user.email ?? null });
-      setCustomers([customer]);
-      setCustomerId(customer.id);
-      toast({ title: 'Cadastro completo', variant: 'success' });
-    } catch (e: any) {
-      toast({ title: 'Erro ao salvar cadastro', description: e.message, variant: 'destructive' });
-    } finally {
-      setCreatingOwnCustomer(false);
-    }
-  };
 
   const handleCreateCustomer = async () => {
     if (!newName.trim() || !newPhone.trim()) {
@@ -112,7 +94,14 @@ export default function TicketNewScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!customerId) {
+    const needsOwnCustomer = isRep && !customers[0];
+
+    if (needsOwnCustomer) {
+      if (!ownName.trim() || !ownPhone.trim()) {
+        toast({ title: 'Preencha seu nome e telefone', variant: 'destructive' });
+        return;
+      }
+    } else if (!customerId) {
       toast({ title: 'Selecione um cliente', variant: 'destructive' });
       return;
     }
@@ -127,7 +116,10 @@ export default function TicketNewScreen() {
     }
     setSubmitting(true);
     try {
-      const ticket = await createTicket({ customer_id: customerId, subject: subject.trim(), description: description.trim(), priority, category });
+      const resolvedCustomerId = needsOwnCustomer
+        ? (await createCustomer({ name: ownName.trim(), phone_e164: ownPhone.replace(/\D/g, ''), email: session?.user.email ?? null })).id
+        : customerId;
+      const ticket = await createTicket({ customer_id: resolvedCustomerId, subject: subject.trim(), description: description.trim(), priority, category });
       toast({ title: 'Ticket criado', description: `#${ticket.number}`, variant: 'success' });
       navigate(`/tickets/${ticket.id}`);
     } catch (e: any) {
@@ -148,23 +140,25 @@ export default function TicketNewScreen() {
 
       <div className="space-y-4">
         {isRep ? (
-          <div className="space-y-2">
-            <Label>Cliente</Label>
-            {customers[0] ? (
+          customers[0] ? (
+            <div className="space-y-2">
+              <Label>Cliente</Label>
               <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
                 {customers[0].name} · {customers[0].phone_e164}
               </div>
-            ) : (
-              <div className="space-y-2 rounded-md border border-border p-3">
-                <p className="text-xs text-muted-foreground">Complete seu cadastro de contato antes de abrir o chamado.</p>
-                <Input value={ownName} onChange={e => setOwnName(e.target.value)} placeholder="Seu nome" />
-                <Input value={ownPhone} onChange={e => setOwnPhone(e.target.value)} placeholder="Seu telefone (WhatsApp)" />
-                <Button type="button" size="sm" onClick={handleCreateOwnCustomer} disabled={creatingOwnCustomer} className="gap-2">
-                  {creatingOwnCustomer && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
-                </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Seu nome</Label>
+                <Input value={ownName} onChange={e => setOwnName(e.target.value)} placeholder="Nome completo" />
               </div>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label>Seu telefone (WhatsApp)</Label>
+                <Input value={ownPhone} onChange={e => setOwnPhone(e.target.value)} placeholder="(11) 99999-9999" />
+              </div>
+            </div>
+          )
         ) : (
           <div className="space-y-2">
             <Label>Cliente</Label>

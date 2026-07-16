@@ -1,11 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { listCustomers } from '@/lib/data/customers.repo';
-import { listTickets } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
-import type { Ticket } from '@/lib/data/tickets.repo';
-import { useToast } from '@/hooks/use-toast';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,22 +16,13 @@ const STATUS_TONE: Record<string, string> = {
 
 export default function CustomerDetailScreen() {
   const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { customers, tickets, isLoading } = useTicketsAndCustomers();
 
-  useEffect(() => {
-    Promise.all([listCustomers(), listTickets()])
-      .then(([customers, allTickets]) => {
-        setCustomer(customers.find(c => c.id === id) ?? null);
-        setTickets(allTickets.filter(t => t.customer_id === id));
-      })
-      .catch(e => toast({ title: 'Erro ao carregar cliente', description: e.message, variant: 'destructive' }))
-      .finally(() => setIsLoading(false));
-  }, [id]);
-
-  const sortedTickets = useMemo(() => [...tickets].sort((a, b) => b.created_at.localeCompare(a.created_at)), [tickets]);
+  const customer = useMemo(() => customers.find(c => c.id === id) ?? null, [customers, id]);
+  const sortedTickets = useMemo(
+    () => tickets.filter(t => t.customer_id === id).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [tickets, id],
+  );
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-48 w-full" /></div>;
