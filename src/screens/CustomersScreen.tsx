@@ -1,19 +1,32 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Building2, Trash2 } from 'lucide-react';
-import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
-import { deleteCustomer } from '@/lib/data/customers.repo';
-import type { Customer } from '@/lib/data/customers.repo';
-import { useAuth } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth';
+import type { Customer } from '@/lib/data/customers.repo';
+import { deleteCustomer } from '@/lib/data/customers.repo';
+import { Building2, Search, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function CustomersScreen() {
   const { session } = useAuth();
@@ -27,14 +40,14 @@ export default function CustomersScreen() {
 
   const ticketCountByCustomer = useMemo(() => {
     const map = new Map<string, number>();
-    tickets.forEach(t => map.set(t.customer_id, (map.get(t.customer_id) ?? 0) + 1));
+    tickets.forEach((t) => map.set(t.customer_id, (map.get(t.customer_id) ?? 0) + 1));
     return map;
   }, [tickets]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return customers
-      .filter(c => !q || c.name.toLowerCase().includes(q) || c.phone_e164.includes(q))
+      .filter((c) => !q || c.name.toLowerCase().includes(q) || c.phone_e164.includes(q))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customers, search]);
 
@@ -54,7 +67,12 @@ export default function CustomersScreen() {
   };
 
   if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64 w-full" /></div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -66,7 +84,12 @@ export default function CustomersScreen() {
 
       <div className="relative w-64">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        <Input
+          placeholder="Buscar por nome ou telefone..."
+          className="pl-9"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="rounded-lg border border-border bg-card">
@@ -81,24 +104,37 @@ export default function CustomersScreen() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map(customer => {
+            {filtered.map((customer) => {
               const ticketCount = ticketCountByCustomer.get(customer.id) ?? 0;
               return (
                 <TableRow key={customer.id} className="hover:bg-accent/50">
                   <TableCell>
-                    <Link to={`/customers/${customer.id}`} className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary">
+                    <Link
+                      to={`/customers/${customer.id}`}
+                      className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary"
+                    >
                       <Building2 className="h-4 w-4 text-muted-foreground" /> {customer.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{customer.phone_e164}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{customer.email ?? '—'}</TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">{ticketCount}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {customer.phone_e164}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {customer.email ?? '—'}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {ticketCount}
+                  </TableCell>
                   {isAdmin && (
                     <TableCell className="text-right">
                       <Button
-                        variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
                         disabled={ticketCount > 0}
-                        title={ticketCount > 0 ? 'Só é possível excluir clientes sem tickets' : undefined}
+                        title={
+                          ticketCount > 0 ? 'Só é possível excluir clientes sem tickets' : undefined
+                        }
                         onClick={() => setCustomerToDelete(customer)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -110,14 +146,22 @@ export default function CustomersScreen() {
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 5 : 4} className="text-center text-sm text-muted-foreground py-8">Nenhum cliente encontrado.</TableCell>
+                <TableCell
+                  colSpan={isAdmin ? 5 : 4}
+                  className="text-center text-sm text-muted-foreground py-8"
+                >
+                  Nenhum cliente encontrado.
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
 
-      <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
+      <AlertDialog
+        open={!!customerToDelete}
+        onOpenChange={(open) => !open && setCustomerToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {customerToDelete?.name}?</AlertDialogTitle>
@@ -127,7 +171,11 @@ export default function CustomersScreen() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {deleting ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>

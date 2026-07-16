@@ -133,13 +133,19 @@
    ══════════════════════════════════════ */
 
 @keyframes confetti-fall {
-  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) rotate(720deg);
+    opacity: 0;
+  }
 }
 
 .confetti-card::before,
 .confetti-card::after {
-  content: "";
+  content: '';
   position: absolute;
   top: -4px;
   width: 6px;
@@ -161,23 +167,49 @@
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 @keyframes neon-pulse-indigo {
-  0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,0.15), 0 0 24px rgba(99,102,241,0.06); }
-  50% { box-shadow: 0 0 18px rgba(99,102,241,0.30), 0 0 36px rgba(99,102,241,0.12); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 12px rgba(99, 102, 241, 0.15),
+      0 0 24px rgba(99, 102, 241, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(99, 102, 241, 0.3),
+      0 0 36px rgba(99, 102, 241, 0.12);
+  }
 }
 
 @keyframes neon-pulse-emerald {
-  0%, 100% { box-shadow: 0 0 10px rgba(16,185,129,0.10), 0 0 20px rgba(16,185,129,0.04); }
-  50% { box-shadow: 0 0 14px rgba(16,185,129,0.20), 0 0 28px rgba(16,185,129,0.08); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(16, 185, 129, 0.1),
+      0 0 20px rgba(16, 185, 129, 0.04);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(16, 185, 129, 0.2),
+      0 0 28px rgba(16, 185, 129, 0.08);
+  }
 }
 
 @keyframes neon-border-travel {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 /* ══════════════════════════════════════
@@ -189,10 +221,19 @@
     background-color: hsl(0 0% 93%);
     color: hsl(213 90% 9%);
   }
-  .lp-section-light h2, .lp-section-light h3, .lp-section-light h4 { color: hsl(213 90% 9%); }
-  .lp-section-light p, .lp-section-light .text-muted-foreground { color: hsl(213 30% 40%); }
+  .lp-section-light h2,
+  .lp-section-light h3,
+  .lp-section-light h4 {
+    color: hsl(213 90% 9%);
+  }
+  .lp-section-light p,
+  .lp-section-light .text-muted-foreground {
+    color: hsl(213 30% 40%);
+  }
 
-  .lp-section-dark { background-color: hsl(214 93% 6%); }
+  .lp-section-dark {
+    background-color: hsl(214 93% 6%);
+  }
 
   .lp-solid-card {
     background: hsl(0 0% 100%);
@@ -226,7 +267,9 @@
     background-color: hsl(239 84% 67%);
     color: white;
   }
-  .lp-btn-primary-indigo:hover { filter: brightness(1.1); }
+  .lp-btn-primary-indigo:hover {
+    filter: brightness(1.1);
+  }
 
   .lp-btn-ghost-clean {
     @apply font-semibold px-8 py-4 rounded-xl transition-all duration-200;
@@ -239,5 +282,7 @@
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .lp-section-spacing { @apply py-24 lg:py-32; }
+  .lp-section-spacing {
+    @apply py-24 lg:py-32;
+  }
 }

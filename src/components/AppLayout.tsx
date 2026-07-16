@@ -1,16 +1,24 @@
-import { Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, Bell } from 'lucide-react';
-import {
-  SidebarProvider, SidebarTrigger, Sidebar, SidebarContent,
-  SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
-  SidebarMenuButton, SidebarFooter, useSidebar,
-} from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
 import { useOpenTicketsBadge } from '@/hooks/use-open-tickets-badge';
+import { useAuth } from '@/lib/auth';
 import { getNavItems } from '@/lib/nav-items';
+import { Bell, LogOut } from 'lucide-react';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 function NotificationBell() {
   const { session } = useAuth();
@@ -20,12 +28,17 @@ function NotificationBell() {
 
   if (!enabled) return null;
 
-  const label = !count ? 'Notificações, nenhum chamado novo' : `Notificações, ${count} chamados novos`;
+  const label = !count
+    ? 'Notificações, nenhum chamado novo'
+    : `Notificações, ${count} chamados novos`;
 
   return (
     <Button
-      variant="ghost" size="icon" className="relative h-8 w-8 text-foreground/75 hover:text-foreground"
-      aria-label={label} onClick={() => navigate('/tickets')}
+      variant="ghost"
+      size="icon"
+      className="relative h-8 w-8 text-foreground/75 hover:text-foreground"
+      aria-label={label}
+      onClick={() => navigate('/tickets')}
     >
       <Bell className="h-[18px] w-[18px]" />
       {!!count && (
@@ -53,7 +66,9 @@ function AppSidebarContent() {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-        {!collapsed && <span className="text-lg font-bold text-white tracking-tight">HelpDesk</span>}
+        {!collapsed && (
+          <span className="text-lg font-bold text-white tracking-tight">HelpDesk</span>
+        )}
         {collapsed && <span className="text-lg font-bold text-white">HD</span>}
       </div>
       <SidebarContent>
@@ -81,7 +96,10 @@ function AppSidebarContent() {
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="text-sidebar-foreground hover:text-white hover:bg-white/10 cursor-pointer">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="text-sidebar-foreground hover:text-white hover:bg-white/10 cursor-pointer"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               {!collapsed && <span>Sair</span>}
             </SidebarMenuButton>
@@ -94,7 +112,13 @@ function AppSidebarContent() {
 
 export default function AppLayout() {
   const { session } = useAuth();
-  const initials = session?.user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? 'U';
+  const initials =
+    session?.user.name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? 'U';
 
   return (
     <SidebarProvider>
@@ -107,9 +131,13 @@ export default function AppLayout() {
               <NotificationBell />
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-foreground hidden md:block">{session?.user.name}</span>
+                <span className="text-sm font-medium text-foreground hidden md:block">
+                  {session?.user.name}
+                </span>
               </div>
             </div>
           </header>

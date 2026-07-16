@@ -1,11 +1,11 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function NotFoundScreen() {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404: rota não encontrada:", location.pathname);
+    console.error('404: rota não encontrada:', location.pathname);
   }, [location.pathname]);
 
   return (
@@ -13,7 +13,9 @@ export default function NotFoundScreen() {
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">404</h1>
         <p className="mb-4 text-xl text-muted-foreground">Página não encontrada</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">Voltar ao início</a>
+        <a href="/" className="text-primary underline hover:text-primary/90">
+          Voltar ao início
+        </a>
       </div>
     </div>
   );

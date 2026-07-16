@@ -1,22 +1,39 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search, Trash2, LayoutGrid } from 'lucide-react';
-import { deleteTicket } from '@/lib/data/tickets.repo';
-import type { Ticket } from '@/lib/data/tickets.repo';
-import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
-import { useAuth } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth';
+import type { Ticket } from '@/lib/data/tickets.repo';
+import { deleteTicket } from '@/lib/data/tickets.repo';
+import { LayoutGrid, Plus, Search, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
+const STATUS_LABEL: Record<string, string> = {
+  open: 'Aberto',
+  in_progress: 'Em atendimento',
+  resolved: 'Resolvido',
+};
 const STATUS_TONE: Record<string, string> = {
   open: 'bg-status-open text-white border-transparent',
   in_progress: 'bg-status-pending text-white border-transparent',
@@ -29,7 +46,13 @@ const PRIORITY_TONE: Record<string, string> = {
   high: 'bg-priority-high text-white border-transparent',
 };
 
-const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 export default function TicketsScreen() {
   const { session } = useAuth();
@@ -42,15 +65,18 @@ export default function TicketsScreen() {
   const isAdmin = session?.role === 'admin';
   const isRep = session?.role === 'rep';
 
-  const customersById = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
+  const customersById = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tickets
-      .filter(t => !q
-        || t.category?.toLowerCase().includes(q)
-        || t.subject.toLowerCase().includes(q)
-        || customersById.get(t.customer_id)?.name.toLowerCase().includes(q))
+      .filter(
+        (t) =>
+          !q ||
+          t.category?.toLowerCase().includes(q) ||
+          t.subject.toLowerCase().includes(q) ||
+          customersById.get(t.customer_id)?.name.toLowerCase().includes(q)
+      )
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [tickets, search, customersById]);
 
@@ -87,7 +113,9 @@ export default function TicketsScreen() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{isRep ? 'Meus Chamados' : 'Tickets'}</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {isRep ? 'Meus Chamados' : 'Tickets'}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isRep ? `${filtered.length} chamados no seu histórico` : `${filtered.length} tickets`}
           </p>
@@ -95,11 +123,15 @@ export default function TicketsScreen() {
         <div className="flex gap-2">
           {!isRep && (
             <Button variant="outline" asChild className="gap-2">
-              <Link to="/tickets/kanban"><LayoutGrid className="h-4 w-4" /> Ver como Kanban</Link>
+              <Link to="/tickets/kanban">
+                <LayoutGrid className="h-4 w-4" /> Ver como Kanban
+              </Link>
             </Button>
           )}
           <Button asChild className="gap-2">
-            <Link to="/tickets/new"><Plus className="h-4 w-4" /> {isRep ? 'Abrir chamado' : 'Novo Ticket'}</Link>
+            <Link to="/tickets/new">
+              <Plus className="h-4 w-4" /> {isRep ? 'Abrir chamado' : 'Novo Ticket'}
+            </Link>
           </Button>
         </div>
       </div>
@@ -107,8 +139,14 @@ export default function TicketsScreen() {
       <div className="relative w-64">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder={isRep ? 'Buscar por categoria ou assunto...' : 'Buscar por categoria, assunto ou cliente...'}
-          className="pl-9" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder={
+            isRep
+              ? 'Buscar por categoria ou assunto...'
+              : 'Buscar por categoria, assunto ou cliente...'
+          }
+          className="pl-9"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -127,30 +165,55 @@ export default function TicketsScreen() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map(ticket => (
+            {filtered.map((ticket) => (
               <TableRow key={ticket.id} className="hover:bg-accent/50">
                 <TableCell>
-                  <Link to={`/tickets/${ticket.id}`} className="font-mono text-xs text-muted-foreground">{ticket.number}</Link>
+                  <Link
+                    to={`/tickets/${ticket.id}`}
+                    className="font-mono text-xs text-muted-foreground"
+                  >
+                    {ticket.number}
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <Link to={`/tickets/${ticket.id}`} className="block hover:text-primary">
-                    <span className="text-sm font-medium text-foreground line-clamp-1">{ticket.subject}</span>
+                    <span className="text-sm font-medium text-foreground line-clamp-1">
+                      {ticket.subject}
+                    </span>
                     {isRep && ticket.description && (
-                      <span className="block text-xs text-muted-foreground line-clamp-1 mt-0.5">{ticket.description}</span>
+                      <span className="block text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                        {ticket.description}
+                      </span>
                     )}
                   </Link>
                 </TableCell>
                 {!isRep && (
-                  <TableCell className="text-sm text-muted-foreground">{customersById.get(ticket.customer_id)?.name ?? '—'}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {customersById.get(ticket.customer_id)?.name ?? '—'}
+                  </TableCell>
                 )}
-                <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
-                <TableCell><Badge variant="outline" className={PRIORITY_TONE[ticket.priority]}>{PRIORITY_LABEL[ticket.priority]}</Badge></TableCell>
-                <TableCell className="text-sm text-muted-foreground">{ticket.category ?? '—'}</TableCell>
-                <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{formatDate(ticket.created_at)}</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={STATUS_TONE[ticket.status]}>
+                    {STATUS_LABEL[ticket.status]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={PRIORITY_TONE[ticket.priority]}>
+                    {PRIORITY_LABEL[ticket.priority]}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {ticket.category ?? '—'}
+                </TableCell>
+                <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                  {formatDate(ticket.created_at)}
+                </TableCell>
                 {isAdmin && (
                   <TableCell className="text-right">
                     <Button
-                      variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => setTicketToDelete(ticket)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -161,7 +224,10 @@ export default function TicketsScreen() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columnCount} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell
+                  colSpan={columnCount}
+                  className="text-center text-sm text-muted-foreground py-8"
+                >
                   Nenhum ticket encontrado.
                 </TableCell>
               </TableRow>
@@ -170,7 +236,10 @@ export default function TicketsScreen() {
         </Table>
       </div>
 
-      <AlertDialog open={!!ticketToDelete} onOpenChange={(open) => !open && setTicketToDelete(null)}>
+      <AlertDialog
+        open={!!ticketToDelete}
+        onOpenChange={(open) => !open && setTicketToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir ticket #{ticketToDelete?.number}?</AlertDialogTitle>
@@ -180,7 +249,11 @@ export default function TicketsScreen() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {deleting ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>

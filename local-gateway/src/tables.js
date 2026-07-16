@@ -22,7 +22,7 @@ export const TABLES = {
     hasOwner: true,
   },
   settings: {
-    columns: ['company_name', 'primary_color'],
+    columns: ['company_name'],
     hasOwner: false,
     writeRoles: { create: ['admin', 'manager'], update: ['admin', 'manager'] },
   },

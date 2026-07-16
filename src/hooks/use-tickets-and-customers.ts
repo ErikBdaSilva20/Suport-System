@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { listTickets } from '@/lib/data/tickets.repo';
+import { useToast } from '@/hooks/use-toast';
+import type { Customer } from '@/lib/data/customers.repo';
 import { listCustomers } from '@/lib/data/customers.repo';
 import type { Ticket } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
-import { useToast } from '@/hooks/use-toast';
+import { listTickets } from '@/lib/data/tickets.repo';
+import { useCallback, useEffect, useState } from 'react';
 
 interface TicketsAndCustomers {
   tickets: Ticket[];
@@ -24,24 +24,37 @@ export function useTicketsAndCustomers(): TicketsAndCustomers {
 
   const reload = useCallback(async () => {
     setIsLoading(true);
-    const [ticketsResult, customersResult] = await Promise.allSettled([listTickets(), listCustomers()]);
+    const [ticketsResult, customersResult] = await Promise.allSettled([
+      listTickets(),
+      listCustomers(),
+    ]);
 
     if (ticketsResult.status === 'fulfilled') {
       setTickets(ticketsResult.value);
     } else {
-      toast({ title: 'Erro ao carregar tickets', description: ticketsResult.reason.message, variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar tickets',
+        description: ticketsResult.reason.message,
+        variant: 'destructive',
+      });
     }
 
     if (customersResult.status === 'fulfilled') {
       setCustomers(customersResult.value);
     } else {
-      toast({ title: 'Erro ao carregar clientes', description: customersResult.reason.message, variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar clientes',
+        description: customersResult.reason.message,
+        variant: 'destructive',
+      });
     }
 
     setIsLoading(false);
   }, [toast]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   return { tickets, customers, isLoading, reload };
 }

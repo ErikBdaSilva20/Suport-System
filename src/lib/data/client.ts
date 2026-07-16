@@ -2,14 +2,14 @@
 //
 // Este arquivo normalmente é herdado do scaffold-base (clone-templates/wiki ou
 // clone-templates/forms-nps) e nunca reescrito à mão pelo editor de IA. Como este
-// repo ainda não teve o scaffold clonado (Story 8.2, pendente de decisão), a
+// repo ainda não teve o scaffold clonado, a
 // implementação abaixo segue o contrato documentado ao pé da letra para que o
 // resto do app já fique ligado corretamente — troque por uma cópia literal do
 // client.ts do scaffold assim que ele for escolhido/clonado.
 //
 // Endpoints de auth seguem a convenção padrão do Better-Auth (/api/auth/*).
-// Confirme os paths exatos contra o tenant-gateway real (Cerebra-AI/tenant-gateway)
-// antes de considerar isto pronto para produção — não há como validar sem acesso
+// Confirme os paths exatos contra o tenant-gateway real.
+// antes de considerar pronto para produção — não há como validar sem acesso
 // ao gateway.
 
 import { previewFixtures } from './preview-fixtures';
@@ -38,7 +38,8 @@ const isPreview = typeof window !== 'undefined' && !!window.__MASI_PREVIEW__;
 
 async function api<T>(method: string, path: string, body?: unknown): Promise<T> {
   const gw = resolveGatewayUrl();
-  if (!gw) throw new Error('Gateway URL não configurada (VITE_GATEWAY_URL, ?gw= ou window.__MASI_GW__).');
+  if (!gw)
+    throw new Error('Gateway URL não configurada (VITE_GATEWAY_URL, ?gw= ou window.__MASI_GW__).');
 
   const res = await fetch(`${gw}${path}`, {
     method,
@@ -65,7 +66,9 @@ function previewStore(table: string): Record<string, unknown>[] {
   const key = `__masi_preview_${table}`;
   const w = window as unknown as Record<string, Record<string, unknown>[] | undefined>;
   if (!w[key]) {
-    w[key] = ((previewFixtures[table] as Record<string, unknown>[] | undefined) ?? []).map(row => ({ ...row }));
+    w[key] = ((previewFixtures[table] as Record<string, unknown>[] | undefined) ?? []).map(
+      (row) => ({ ...row })
+    );
   }
   return w[key]!;
 }
@@ -97,7 +100,7 @@ export const db = {
       update: async (id: string, patch: Partial<R>): Promise<R> => {
         if (isPreview) {
           const rows = previewStore(name);
-          const idx = rows.findIndex(r => r.id === id);
+          const idx = rows.findIndex((r) => r.id === id);
           if (idx === -1) throw new Error(`${name}/${id} não encontrado (preview)`);
           rows[idx] = { ...rows[idx], ...patch, updated_at: new Date().toISOString() };
           return rows[idx] as unknown as R;
@@ -107,7 +110,7 @@ export const db = {
       remove: async (id: string): Promise<void> => {
         if (isPreview) {
           const rows = previewStore(name);
-          const idx = rows.findIndex(r => r.id === id);
+          const idx = rows.findIndex((r) => r.id === id);
           if (idx !== -1) rows.splice(idx, 1);
           return;
         }
@@ -141,7 +144,12 @@ export const auth = {
   async signIn(email: string, password: string): Promise<void> {
     await api('POST', '/api/auth/sign-in/email', { email, password });
   },
-  async signUp(email: string, password: string, name: string, opts?: { intent?: 'customer' }): Promise<void> {
+  async signUp(
+    email: string,
+    password: string,
+    name: string,
+    opts?: { intent?: 'customer' }
+  ): Promise<void> {
     await api('POST', '/api/auth/sign-up/email', { email, password, name, intent: opts?.intent });
   },
   async signOut(): Promise<void> {
@@ -155,11 +163,13 @@ export const auth = {
       return null;
     }
   },
-  // Provisiona um funcionário direto (sem autocadastro) — só admin chama isto.
   // Precisa de suporte equivalente no tenant-gateway real; hoje só funciona
-  // contra o local-gateway (ver Importantdoc.md — limitação de v1, mesma
-  // categoria da promoção de papel documentada na Story 6.3).
-  async adminCreateUser(name: string, email: string, role: 'manager'): Promise<{ user: AuthUser; role: Role; temporaryPassword: string }> {
+  // contra o local-gateway.
+  async adminCreateUser(
+    name: string,
+    email: string,
+    role: 'manager'
+  ): Promise<{ user: AuthUser; role: Role; temporaryPassword: string }> {
     return api('POST', '/api/auth/admin/create-user', { name, email, role });
   },
 };

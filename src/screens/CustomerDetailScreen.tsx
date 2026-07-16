@@ -1,24 +1,47 @@
-import { useMemo, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Loader2, Trash2 } from 'lucide-react';
-import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
-import { updateCustomer, deleteCustomer } from '@/lib/data/customers.repo';
-import { useAuth } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth';
+import { deleteCustomer, updateCustomer } from '@/lib/data/customers.repo';
+import { ArrowLeft, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
-const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
+const STATUS_LABEL: Record<string, string> = {
+  open: 'Aberto',
+  in_progress: 'Em atendimento',
+  resolved: 'Resolvido',
+};
 const STATUS_TONE: Record<string, string> = {
   open: 'bg-status-open text-white border-transparent',
   in_progress: 'bg-status-pending text-white border-transparent',
@@ -34,10 +57,13 @@ export default function CustomerDetailScreen() {
 
   const isAdmin = session?.role === 'admin';
 
-  const customer = useMemo(() => customers.find(c => c.id === id) ?? null, [customers, id]);
+  const customer = useMemo(() => customers.find((c) => c.id === id) ?? null, [customers, id]);
   const sortedTickets = useMemo(
-    () => tickets.filter(t => t.customer_id === id).sort((a, b) => b.created_at.localeCompare(a.created_at)),
-    [tickets, id],
+    () =>
+      tickets
+        .filter((t) => t.customer_id === id)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [tickets, id]
   );
 
   const [showEdit, setShowEdit] = useState(false);
@@ -96,13 +122,22 @@ export default function CustomerDetailScreen() {
   };
 
   if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-48 w-full" /></div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
   }
 
   if (!customer) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="icon" asChild><Link to="/customers"><ArrowLeft className="h-4 w-4" /></Link></Button>
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="/customers">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
         <p className="text-muted-foreground">Cliente não encontrado.</p>
       </div>
     );
@@ -111,7 +146,11 @@ export default function CustomerDetailScreen() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild><Link to="/customers"><ArrowLeft className="h-4 w-4" /></Link></Button>
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="/customers">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
         <h1 className="text-2xl font-bold text-foreground flex-1">{customer.name}</h1>
         {isAdmin && (
           <div className="flex gap-2">
@@ -119,10 +158,13 @@ export default function CustomerDetailScreen() {
               <Pencil className="h-3.5 w-3.5" /> Editar
             </Button>
             <Button
-              variant="outline" size="sm"
+              variant="outline"
+              size="sm"
               className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 disabled:opacity-40"
               disabled={sortedTickets.length > 0}
-              title={sortedTickets.length > 0 ? 'Só é possível excluir clientes sem tickets' : undefined}
+              title={
+                sortedTickets.length > 0 ? 'Só é possível excluir clientes sem tickets' : undefined
+              }
               onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="h-3.5 w-3.5" /> Excluir
@@ -150,7 +192,9 @@ export default function CustomerDetailScreen() {
 
       <div className="rounded-lg border border-border bg-card">
         <div className="p-4 pb-0">
-          <h2 className="text-sm font-semibold text-foreground">Tickets ({sortedTickets.length})</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Tickets ({sortedTickets.length})
+          </h2>
         </div>
         <Table>
           <TableHeader>
@@ -161,20 +205,36 @@ export default function CustomerDetailScreen() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTickets.map(ticket => (
+            {sortedTickets.map((ticket) => (
               <TableRow key={ticket.id} className="hover:bg-accent/50">
                 <TableCell>
-                  <Link to={`/tickets/${ticket.id}`} className="font-mono text-xs text-muted-foreground">{ticket.number}</Link>
+                  <Link
+                    to={`/tickets/${ticket.id}`}
+                    className="font-mono text-xs text-muted-foreground"
+                  >
+                    {ticket.number}
+                  </Link>
                 </TableCell>
                 <TableCell>
-                  <Link to={`/tickets/${ticket.id}`} className="text-sm font-medium text-foreground hover:text-primary">{ticket.subject}</Link>
+                  <Link
+                    to={`/tickets/${ticket.id}`}
+                    className="text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    {ticket.subject}
+                  </Link>
                 </TableCell>
-                <TableCell><Badge variant="outline" className={STATUS_TONE[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={STATUS_TONE[ticket.status]}>
+                    {STATUS_LABEL[ticket.status]}
+                  </Badge>
+                </TableCell>
               </TableRow>
             ))}
             {sortedTickets.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-8">Nenhum ticket ainda.</TableCell>
+                <TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-8">
+                  Nenhum ticket ainda.
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -184,28 +244,49 @@ export default function CustomerDetailScreen() {
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Editar cliente</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-4 w-4" /> Editar cliente
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label>Nome *</Label>
-              <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome completo" />
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nome completo"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Telefone (WhatsApp) *</Label>
-              <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="(11) 99999-9999" />
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="(11) 99999-9999"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>E-mail</Label>
-              <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="email@empresa.com" />
+              <Input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="email@empresa.com"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Notas</Label>
-              <Textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} className="min-h-[80px]" />
+              <Textarea
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                className="min-h-[80px]"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEdit(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowEdit(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleSaveEdit} disabled={saving} className="gap-2">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
             </Button>
@@ -223,7 +304,11 @@ export default function CustomerDetailScreen() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {deleting ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>

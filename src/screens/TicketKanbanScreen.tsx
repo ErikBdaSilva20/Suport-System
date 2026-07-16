@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { List } from 'lucide-react';
-import { listTickets, updateTicket, assignTicket, resolveTicket } from '@/lib/data/tickets.repo';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth';
+import type { Customer } from '@/lib/data/customers.repo';
 import { listCustomers } from '@/lib/data/customers.repo';
 import type { Ticket } from '@/lib/data/tickets.repo';
-import type { Customer } from '@/lib/data/customers.repo';
+import { assignTicket, listTickets, resolveTicket, updateTicket } from '@/lib/data/tickets.repo';
 import type { TicketStatus } from '@/lib/data/types.gen';
-import { useAuth } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DndContext,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { List } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const COLUMNS: { status: TicketStatus; label: string; tone: string }[] = [
   { status: 'open', label: 'Aberto', tone: 'border-status-open/40' },
@@ -27,8 +35,19 @@ const PRIORITY_TONE: Record<string, string> = {
   high: 'bg-priority-high text-white border-transparent',
 };
 
-function KanbanCard({ ticket, customerName, disabled }: { ticket: Ticket; customerName: string; disabled: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: ticket.id, disabled });
+function KanbanCard({
+  ticket,
+  customerName,
+  disabled,
+}: {
+  ticket: Ticket;
+  customerName: string;
+  disabled: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: ticket.id,
+    disabled,
+  });
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
 
   return (
@@ -41,32 +60,60 @@ function KanbanCard({ ticket, customerName, disabled }: { ticket: Ticket; custom
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs text-muted-foreground">#{ticket.number}</span>
-        <Badge variant="outline" className={`text-[10px] ${PRIORITY_TONE[ticket.priority]}`}>{PRIORITY_LABEL[ticket.priority]}</Badge>
+        <Badge variant="outline" className={`text-[10px] ${PRIORITY_TONE[ticket.priority]}`}>
+          {PRIORITY_LABEL[ticket.priority]}
+        </Badge>
       </div>
-      <Link to={`/tickets/${ticket.id}`} className="block text-sm font-medium text-foreground hover:text-primary line-clamp-2">
+      <Link
+        to={`/tickets/${ticket.id}`}
+        className="block text-sm font-medium text-foreground hover:text-primary line-clamp-2"
+      >
         {ticket.subject}
       </Link>
       <p className="text-xs text-muted-foreground truncate">{customerName}</p>
-      {ticket.category && <Badge variant="outline" className="text-[10px]">{ticket.category}</Badge>}
+      {ticket.category && (
+        <Badge variant="outline" className="text-[10px]">
+          {ticket.category}
+        </Badge>
+      )}
     </div>
   );
 }
 
-function KanbanColumn({ status, label, tone, tickets, customersById, disabled }: {
-  status: TicketStatus; label: string; tone: string; tickets: Ticket[];
-  customersById: Map<string, Customer>; disabled: boolean;
+function KanbanColumn({
+  status,
+  label,
+  tone,
+  tickets,
+  customersById,
+  disabled,
+}: {
+  status: TicketStatus;
+  label: string;
+  tone: string;
+  tickets: Ticket[];
+  customersById: Map<string, Customer>;
+  disabled: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div ref={setNodeRef} className={`flex-1 min-w-64 rounded-lg border-t-2 bg-muted/30 p-3 space-y-2 ${tone} ${isOver ? 'bg-accent/50' : ''}`}>
+    <div
+      ref={setNodeRef}
+      className={`flex-1 min-w-64 rounded-lg border-t-2 bg-muted/30 p-3 space-y-2 ${tone} ${isOver ? 'bg-accent/50' : ''}`}
+    >
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-semibold text-foreground">{label}</h2>
         <span className="text-xs text-muted-foreground">{tickets.length}</span>
       </div>
       <div className="space-y-2 min-h-16">
-        {tickets.map(ticket => (
-          <KanbanCard key={ticket.id} ticket={ticket} customerName={customersById.get(ticket.customer_id)?.name ?? '—'} disabled={disabled} />
+        {tickets.map((ticket) => (
+          <KanbanCard
+            key={ticket.id}
+            ticket={ticket}
+            customerName={customersById.get(ticket.customer_id)?.name ?? '—'}
+            disabled={disabled}
+          />
         ))}
       </div>
     </div>
@@ -96,9 +143,11 @@ export default function TicketKanbanScreen() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
-  const customersById = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
+  const customersById = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers]);
 
   const byStatus = useMemo(() => {
     const grouped: Record<TicketStatus, Ticket[]> = { open: [], in_progress: [], resolved: [] };
@@ -109,11 +158,11 @@ export default function TicketKanbanScreen() {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || !session) return;
-    const ticket = tickets.find(t => t.id === active.id);
+    const ticket = tickets.find((t) => t.id === active.id);
     const newStatus = over.id as TicketStatus;
     if (!ticket || ticket.status === newStatus) return;
 
-    setTickets(prev => prev.map(t => (t.id === ticket.id ? { ...t, status: newStatus } : t)));
+    setTickets((prev) => prev.map((t) => (t.id === ticket.id ? { ...t, status: newStatus } : t)));
     try {
       if (newStatus === 'in_progress') await assignTicket(ticket.id, session.user.id);
       else if (newStatus === 'resolved') await resolveTicket(ticket.id);
@@ -128,7 +177,11 @@ export default function TicketKanbanScreen() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
-        <div className="flex gap-3"><Skeleton className="h-96 flex-1" /><Skeleton className="h-96 flex-1" /><Skeleton className="h-96 flex-1" /></div>
+        <div className="flex gap-3">
+          <Skeleton className="h-96 flex-1" />
+          <Skeleton className="h-96 flex-1" />
+          <Skeleton className="h-96 flex-1" />
+        </div>
       </div>
     );
   }
@@ -138,13 +191,15 @@ export default function TicketKanbanScreen() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Kanban de tickets</h1>
         <Button variant="outline" size="sm" className="gap-2" asChild>
-          <Link to="/tickets"><List className="h-4 w-4" /> Ver como lista</Link>
+          <Link to="/tickets">
+            <List className="h-4 w-4" /> Ver como lista
+          </Link>
         </Button>
       </div>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {COLUMNS.map(col => (
+          {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.status}
               status={col.status}

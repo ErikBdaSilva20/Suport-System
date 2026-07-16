@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
 import { listTickets } from '@/lib/data/tickets.repo';
+import { useCallback, useEffect, useState } from 'react';
 
 const POLL_INTERVAL_MS = 30_000;
 const SEEN_STORAGE_KEY = 'hd_seen_tickets';
@@ -15,7 +15,7 @@ function getSeenTicketIds(): Set<string> {
 
 // Marca um ticket como "espiado" pelo admin/manager atual. Só suprime o
 // destaque enquanto o ticket continuar `open` — a contagem em si sempre
-// depende do status real (ver EXPERIENCE.md > State Patterns, trava anti-confusão).
+// depende do status real.
 export function markTicketSeen(id: string): void {
   const seen = getSeenTicketIds();
   if (seen.has(id)) return;
@@ -38,7 +38,7 @@ export function useOpenTicketsBadge(enabled: boolean): number | null {
     try {
       const tickets = await listTickets();
       const seen = getSeenTicketIds();
-      setCount(tickets.filter(t => t.status === 'open' && !seen.has(t.id)).length);
+      setCount(tickets.filter((t) => t.status === 'open' && !seen.has(t.id)).length);
     } catch {
       // sino é conveniência, não caminho crítico — mantém a última contagem conhecida
     }

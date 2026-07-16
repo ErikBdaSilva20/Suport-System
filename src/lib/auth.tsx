@@ -1,6 +1,6 @@
+import { auth, type AuthSession } from '@/lib/data/client';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { auth, type AuthSession } from '@/lib/data/client';
 
 interface AuthContextValue {
   session: AuthSession | null;
@@ -69,9 +69,9 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// Telas de gestão de equipe (dashboard, kanban) não fazem sentido pra um rep —
-// ele tem a própria home enxuta em /tickets (Story 10.3). Bloqueia acesso
-// direto por URL, não só a ausência do link no menu (Story 10.1).
+// Telas de gestão de equipe não fazem sentido pra um rep —
+// ele tem a própria home enxuta em /tickets. Bloqueia acesso
+// direto por URL, não só a ausência do link no menu.
 export function RequireStaff({ children }: { children: ReactNode }) {
   const { session, isLoading } = useAuth();
 
