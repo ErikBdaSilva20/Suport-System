@@ -1,11 +1,19 @@
-# 6. Schema-alvo (Neon do tenant) — seguindo §B4 do guia
+-- a tabela "user" (Better-Auth) já precisa existir no banco
+-- ANTES de rodar este script — ela não é criada aqui, é provisionada pelo
+-- tenant-gateway/Better-Auth. Sem ela, as foreign keys abaixo falham.
 
-O schema abaixo é o que `supabase/migrations/0001_business_schema.sql` deve virar depois da poda. Segue à risca §B4: `owner_id text references "user"(id) on delete cascade` em toda tabela escrita pelo rep, sem RLS, sem `auth.uid()`, sem `profiles`, `snake_case`, nomes não reservados.
+create extension if not exists pgcrypto;
 
-```sql
 -- ============ ENUMS ============
-create type ticket_status as enum ('open', 'in_progress', 'resolved');
-create type ticket_priority as enum ('low', 'medium', 'high');
+do $$ begin
+  create type ticket_status as enum ('open', 'in_progress', 'resolved');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type ticket_priority as enum ('low', 'medium', 'high');
+exception when duplicate_object then null;
+end $$;
 
 -- ============ CUSTOMERS ============
 -- Cadastro de clientes (quem recebe o contato por WhatsApp).
@@ -45,7 +53,10 @@ create index if not exists idx_tickets_owner on tickets(owner_id);
 create index if not exists idx_tickets_status on tickets(status);
 create index if not exists idx_tickets_customer on tickets(customer_id);
 
--- ============ TICKET NOTES (opcional) ============
+-- categoria simples como coluna, sem tabela de lookup.
+alter table tickets add column if not exists category text;
+
+-- ============ TICKET NOTES ============
 -- Notas internas do manager sobre o que aconteceu no WhatsApp.
 -- Escrito por manager/admin, mas o rep também pode ler os próprios → owner_id obrigatório.
 create table if not exists ticket_notes (
@@ -58,37 +69,33 @@ create table if not exists ticket_notes (
 create index if not exists idx_ticket_notes_ticket on ticket_notes(ticket_id);
 create index if not exists idx_ticket_notes_owner on ticket_notes(owner_id);
 
+-- ============ SETTINGS ============
+-- Configuração do tenant (nome da empresa, cor primária). Tabela "lookup" de
+-- tenant único — sem owner_id; leitura liberada, escrita só admin/manager
+-- via regra do gateway em tabelas sem owner_id.
+create table if not exists settings (
+  id             uuid primary key default gen_random_uuid(),
+  company_name   text not null default 'Minha Empresa',
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+-- Sem uso real na UI (nunca aplicada em nenhuma tela) — remove se já existir de uma execução anterior.
+alter table settings drop column if exists primary_color;
+
 -- ============ TRIGGERS updated_at ============
 create or replace function touch_updated_at() returns trigger as $$
 begin new.updated_at = now(); return new; end;
 $$ language plpgsql;
 
+-- create trigger não aceita "if not exists" — dropa e recria pra ficar idempotente.
+drop trigger if exists t_customers_updated on customers;
 create trigger t_customers_updated before update on customers
   for each row execute function touch_updated_at();
+
+drop trigger if exists t_tickets_updated on tickets;
 create trigger t_tickets_updated before update on tickets
   for each row execute function touch_updated_at();
-```
 
-## O que este schema **não** tem (por design)
-
-- Nenhum `enable row level security`.
-- Nenhum `create policy`.
-- Nenhuma referência a `auth.users` (é `"user"(id)`, Better-Auth).
-- Nenhum `has_role`, `get_my_role`, `search_kb_articles`.
-- Nenhuma tabela reservada (`user`, `session`, `account`, `verification`, `organization`, `member`, `invitation`).
-- Nenhum `owner_id uuid` — é **text**.
-- Nenhum join implícito esperado do banco. As telas fazem `listTickets()` + `listCustomers()` e resolvem no front.
-
-## Notas sobre `number bigserial`
-
-O modo genérico do gateway não conhece a coluna `number` — ela é preenchida pelo default do Postgres, e o front recebe no retorno do `POST /data/tickets`. Não mandar do front.
-
-## Se o usuário quiser categoria/departamento
-
-Adicionar como coluna simples no ticket, não como tabela lookup:
-
-```sql
-alter table tickets add column category text; -- ex: 'financeiro','tecnico','comercial'
-```
-
-Isso evita uma tabela `categories` só para dropdown.
+drop trigger if exists t_settings_updated on settings;
+create trigger t_settings_updated before update on settings
+  for each row execute function touch_updated_at();
