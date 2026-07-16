@@ -1,20 +1,29 @@
 # 7. Papéis — Rep / Manager / Admin
 
-O usuário pediu:
+> **Atualizado (revisão 2):** o mapeamento original abaixo tratava `rep` como
+> funcionário. O usuário decidiu inverter: **`rep` = o próprio cliente**, que se
+> autocadastra (com telefone, canal de contato do suporte). `manager` continua
+> sendo o funcionário que atende; `admin` continua vendo tudo. Isso reverte a
+> Story 3.3 (que removeu portal/login do cliente de propósito) e substitui, na
+> prática, o fluxo de autocadastro de cliente pelo rep da Story 6.4 (o fluxo
+> manual antigo continua disponível pra manager/admin abrirem chamado em nome de
+> alguém, ex: atendimento por telefone). Ver `_bmad-output/planning-artifacts/epics.md`.
+
+O usuário pediu (pedido original, histórico):
 
 > "Rep seria o usuário que loga, manager/admin seria quem entra em contato pra conversar com o cliente, depois que se resolveu tudo, volta na aplicação e dá como concluído."
 
 Isso **encaixa perfeitamente** no modelo da fundação (§B8), que já define os três papéis exatos: `admin`, `manager`, `rep`.
 
-## 7.1. Mapeamento
+## 7.1. Mapeamento (atualizado)
 
 | Papel na fundação | Papel no negócio do usuário | O que faz |
 |---|---|---|
-| `rep` | Usuário comum que abre chamado | Login, abre ticket, vê os próprios, acompanha status |
-| `manager` | Atendente que fala com o cliente por WhatsApp | Vê todos os tickets, assume, marca como resolvido, adiciona nota |
-| `admin` | Dono/gestor | Tudo do manager + configurações |
+| `rep` | **Cliente** — se autocadastra com nome, e-mail, senha e telefone | Login, abre o próprio chamado (já vinculado ao próprio cadastro de contato), vê só os próprios, acompanha status |
+| `manager` | Funcionário/atendente que fala com o cliente por WhatsApp | Vê todos os tickets, assume, marca como resolvido, adiciona nota. **Não se autocadastra** — é criado pelo admin em Configurações (nome+e-mail, senha gerada) |
+| `admin` | Dono/gestor | Tudo do manager + configurações + cria contas de funcionário |
 
-O **1º usuário do tenant vira admin automaticamente** (regra do gateway). Os demais entram como **rep** por padrão. O admin promove alguém para manager pela UI de configurações (é uma UPDATE em `"user".role`, feita via endpoint do gateway — **não** via `db.table('user')`, pois `user` é reservado).
+O **1º cadastro no formulário "Equipe" vira admin automaticamente** (regra do gateway) — e só esse formulário; depois do 1º acesso ele fica fechado (qualquer tentativa seguinte é rejeitada, precisa ser criado pelo admin). O formulário "Sou cliente" (separado, com telefone) **sempre** cria `rep`, nunca `admin`, independente de ordem — é a trava contra um cliente externo virar dono do tenant. Ver `Importantdoc.md` e o comentário em `local-gateway/src/auth.js`.
 
 > ⚠️ **Atenção:** promover papel **não** é `db.table()` — hoje o gateway expõe isso em rota própria de admin. Se essa rota não estiver disponível no gateway atual, promoção manual via console é aceitável no v1.
 
@@ -50,14 +59,11 @@ const { role } = useAuth();
 
 Segurança real: mesmo se o rep chamar `PATCH /data/tickets/:id` na mão, o gateway rejeita por `owner_id` não bater com a sessão.
 
-## 7.4. `customers` — quem escreve?
+## 7.4. `customers` — quem escreve? (revisão 2)
 
-Duas opções:
+Como `rep` agora É o cliente, o registro em `customers` é criado **automaticamente no cadastro** (aba "Sou cliente" do login, junto com o `signUp`) — não mais manualmente pelo rep na hora do ticket. `customers.owner_id` = o próprio rep; manager/admin veem todos, como sempre.
 
-1. **Só manager/admin cadastra clientes.** Rep escolhe de uma lista existente ao abrir chamado.
-2. **Rep cadastra o próprio cliente na hora.** `customers.owner_id = rep`; manager/admin veem todos.
-
-Recomendação: **opção 2**, mais fluida. O rep já vem com o pedido e precisa registrar o cliente em conjunto com o ticket.
+O fluxo manual antigo (cadastrar/escolher cliente inline em `/tickets/new`) **continua existindo, mas só pra manager/admin** — útil quando o atendimento acontece por outro canal (ex: telefonema) e é o funcionário quem abre o chamado em nome do cliente.
 
 ## 7.5. Pontos onde o projeto atual diverge
 

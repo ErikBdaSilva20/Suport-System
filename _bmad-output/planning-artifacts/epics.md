@@ -23,6 +23,8 @@ Este documento decompõe a auditoria de `doc/00` a `doc/08` (feita contra o guia
 
 > **Decisão confirmada pelo usuário (não-negociável):** o projeto deve obedecer **integralmente** `Importantdoc.md`. Isso significa: banco **Neon** (não Supabase), app **SPA** (Vite + React, sem Next/SSR, sem backend próprio), e **zero exceção** às regras do guia. A rota "5a" do plano de migração (manter Supabase, só remover RLS/IA/e-mail) está **descartada** — a única rota válida é a "5b": migração completa para `tenant-gateway + Neon + Better-Auth`. Todo Epic abaixo (em especial o Epic 5) deve ser executado com esse padrão como critério de aceite adicional.
 
+> **Decisão posterior do usuário — `rep` vira o cliente (reverte Story 3.3, substitui o fluxo da 6.4):** depois da migração concluída, o usuário decidiu que `rep` deixa de ser "funcionário que abre chamado" e passa a ser **o próprio cliente**, autocadastrado com nome/e-mail/senha/**telefone** (o canal de contato do suporte). `manager` continua sendo o funcionário atendente; `admin` continua vendo tudo e agora também **cria contas de funcionário diretamente** (nome+e-mail, senha gerada — sem autocadastro de equipe depois do 1º admin). Isso reverte a remoção do portal do cliente (Story 3.3) e substitui, na prática, o autocadastro de cliente pelo rep (Story 6.4) — o fluxo manual antigo permanece disponível só pra manager/admin. Detalhe completo em `doc/07-papeis-rep-manager-admin.md`. **Limitação:** a trava "cadastro de cliente nunca vira admin" e o endpoint de criação de funcionário só existem hoje no `local-gateway` (mock local); o tenant-gateway real precisa da mesma lógica antes de publicar em produção.
+
 ## Requirements Inventory
 
 ### Functional Requirements

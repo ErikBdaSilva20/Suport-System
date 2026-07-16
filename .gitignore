@@ -29,3 +29,6 @@ dist-ssr
 _bmad
 
 .claude
+
+# Handoff interno — gitignorado por enquanto (a pedido)
+HANDOFF-PAPEIS-STATUS.md

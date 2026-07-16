@@ -141,8 +141,8 @@ export const auth = {
   async signIn(email: string, password: string): Promise<void> {
     await api('POST', '/api/auth/sign-in/email', { email, password });
   },
-  async signUp(email: string, password: string, name: string): Promise<void> {
-    await api('POST', '/api/auth/sign-up/email', { email, password, name });
+  async signUp(email: string, password: string, name: string, opts?: { intent?: 'customer' }): Promise<void> {
+    await api('POST', '/api/auth/sign-up/email', { email, password, name, intent: opts?.intent });
   },
   async signOut(): Promise<void> {
     await api('POST', '/api/auth/sign-out');
@@ -154,5 +154,12 @@ export const auth = {
     } catch {
       return null;
     }
+  },
+  // Provisiona um funcionário direto (sem autocadastro) — só admin chama isto.
+  // Precisa de suporte equivalente no tenant-gateway real; hoje só funciona
+  // contra o local-gateway (ver Importantdoc.md — limitação de v1, mesma
+  // categoria da promoção de papel documentada na Story 6.3).
+  async adminCreateUser(name: string, email: string, role: 'manager'): Promise<{ user: AuthUser; role: Role; temporaryPassword: string }> {
+    return api('POST', '/api/auth/admin/create-user', { name, email, role });
   },
 };

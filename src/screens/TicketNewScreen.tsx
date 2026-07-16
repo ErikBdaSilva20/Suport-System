@@ -5,6 +5,7 @@ import { listCustomers, createCustomer } from '@/lib/data/customers.repo';
 import { createTicket } from '@/lib/data/tickets.repo';
 import type { Customer } from '@/lib/data/customers.repo';
 import type { TicketPriority } from '@/lib/data/types.gen';
+import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,8 @@ function countWords(value: string): number {
 export default function TicketNewScreen() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session } = useAuth();
+  const isRep = session?.role === 'rep';
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerId, setCustomerId] = useState('');
@@ -40,9 +43,42 @@ export default function TicketNewScreen() {
   const [newEmail, setNewEmail] = useState('');
   const [creatingCustomer, setCreatingCustomer] = useState(false);
 
+  // Fallback pra conta rep legada, cadastrada antes do cliente virar rep (sem
+  // registro em customers ainda) — completa o próprio contato na hora.
+  const [ownName, setOwnName] = useState('');
+  const [ownPhone, setOwnPhone] = useState('');
+  const [creatingOwnCustomer, setCreatingOwnCustomer] = useState(false);
+
   useEffect(() => {
-    listCustomers().then(setCustomers).catch(e => toast({ title: 'Erro ao carregar clientes', description: e.message, variant: 'destructive' }));
-  }, []);
+    listCustomers()
+      .then(rows => {
+        setCustomers(rows);
+        if (isRep && rows[0]) setCustomerId(rows[0].id);
+      })
+      .catch(e => toast({ title: 'Erro ao carregar clientes', description: e.message, variant: 'destructive' }));
+  }, [isRep]);
+
+  useEffect(() => {
+    if (session?.user.name) setOwnName(session.user.name);
+  }, [session?.user.name]);
+
+  const handleCreateOwnCustomer = async () => {
+    if (!ownName.trim() || !ownPhone.trim()) {
+      toast({ title: 'Nome e telefone são obrigatórios', variant: 'destructive' });
+      return;
+    }
+    setCreatingOwnCustomer(true);
+    try {
+      const customer = await createCustomer({ name: ownName.trim(), phone_e164: ownPhone.replace(/\D/g, ''), email: session?.user.email ?? null });
+      setCustomers([customer]);
+      setCustomerId(customer.id);
+      toast({ title: 'Cadastro completo', variant: 'success' });
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar cadastro', description: e.message, variant: 'destructive' });
+    } finally {
+      setCreatingOwnCustomer(false);
+    }
+  };
 
   const handleCreateCustomer = async () => {
     if (!newName.trim() || !newPhone.trim()) {
@@ -111,20 +147,40 @@ export default function TicketNewScreen() {
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>Cliente</Label>
-          <div className="flex gap-2">
-            <Select value={customerId} onValueChange={setCustomerId}>
-              <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
-              <SelectContent>
-                {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button type="button" variant="outline" className="gap-1.5" onClick={() => setShowNewCustomer(true)}>
-              <UserPlus className="h-4 w-4" /> Novo
-            </Button>
+        {isRep ? (
+          <div className="space-y-2">
+            <Label>Cliente</Label>
+            {customers[0] ? (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
+                {customers[0].name} · {customers[0].phone_e164}
+              </div>
+            ) : (
+              <div className="space-y-2 rounded-md border border-border p-3">
+                <p className="text-xs text-muted-foreground">Complete seu cadastro de contato antes de abrir o chamado.</p>
+                <Input value={ownName} onChange={e => setOwnName(e.target.value)} placeholder="Seu nome" />
+                <Input value={ownPhone} onChange={e => setOwnPhone(e.target.value)} placeholder="Seu telefone (WhatsApp)" />
+                <Button type="button" size="sm" onClick={handleCreateOwnCustomer} disabled={creatingOwnCustomer} className="gap-2">
+                  {creatingOwnCustomer && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            <Label>Cliente</Label>
+            <div className="flex gap-2">
+              <Select value={customerId} onValueChange={setCustomerId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
+                <SelectContent>
+                  {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button type="button" variant="outline" className="gap-1.5" onClick={() => setShowNewCustomer(true)}>
+                <UserPlus className="h-4 w-4" /> Novo
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label>Assunto</Label>
