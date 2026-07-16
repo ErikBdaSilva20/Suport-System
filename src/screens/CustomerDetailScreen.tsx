@@ -1,11 +1,22 @@
-import { useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Pencil, Loader2, Trash2 } from 'lucide-react';
 import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
+import { updateCustomer, deleteCustomer } from '@/lib/data/customers.repo';
+import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const STATUS_LABEL: Record<string, string> = { open: 'Aberto', in_progress: 'Em atendimento', resolved: 'Resolvido' };
 const STATUS_TONE: Record<string, string> = {
@@ -16,13 +27,73 @@ const STATUS_TONE: Record<string, string> = {
 
 export default function CustomerDetailScreen() {
   const { id } = useParams<{ id: string }>();
-  const { customers, tickets, isLoading } = useTicketsAndCustomers();
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const { toast } = useToast();
+  const { customers, tickets, isLoading, reload } = useTicketsAndCustomers();
+
+  const isAdmin = session?.role === 'admin';
 
   const customer = useMemo(() => customers.find(c => c.id === id) ?? null, [customers, id]);
   const sortedTickets = useMemo(
     () => tickets.filter(t => t.customer_id === id).sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [tickets, id],
   );
+
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const openEdit = () => {
+    if (!customer) return;
+    setEditName(customer.name);
+    setEditPhone(customer.phone_e164);
+    setEditEmail(customer.email ?? '');
+    setEditNotes(customer.notes ?? '');
+    setShowEdit(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!customer || !editName.trim() || !editPhone.trim()) {
+      toast({ title: 'Nome e telefone são obrigatórios', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateCustomer(customer.id, {
+        name: editName.trim(),
+        phone_e164: editPhone.replace(/\D/g, ''),
+        email: editEmail.trim() || null,
+        notes: editNotes.trim() || null,
+      });
+      await reload();
+      setShowEdit(false);
+      toast({ title: 'Cliente atualizado', variant: 'success' });
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!customer) return;
+    setDeleting(true);
+    try {
+      await deleteCustomer(customer.id);
+      toast({ title: `${customer.name} excluído` });
+      navigate('/customers');
+    } catch (e: any) {
+      toast({ title: 'Erro ao excluir', description: e.message, variant: 'destructive' });
+      setDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-48 w-full" /></div>;
@@ -41,7 +112,23 @@ export default function CustomerDetailScreen() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild><Link to="/customers"><ArrowLeft className="h-4 w-4" /></Link></Button>
-        <h1 className="text-2xl font-bold text-foreground">{customer.name}</h1>
+        <h1 className="text-2xl font-bold text-foreground flex-1">{customer.name}</h1>
+        {isAdmin && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={openEdit}>
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </Button>
+            <Button
+              variant="outline" size="sm"
+              className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 disabled:opacity-40"
+              disabled={sortedTickets.length > 0}
+              title={sortedTickets.length > 0 ? 'Só é possível excluir clientes sem tickets' : undefined}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Excluir
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border border-border bg-card p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -93,6 +180,55 @@ export default function CustomerDetailScreen() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={showEdit} onOpenChange={setShowEdit}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Editar cliente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nome *</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome completo" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Telefone (WhatsApp) *</Label>
+              <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="(11) 99999-9999" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>E-mail</Label>
+              <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="email@empresa.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Notas</Label>
+              <Textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} className="min-h-[80px]" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEdit(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={saving} className="gap-2">
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {customer.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cliente será removido. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

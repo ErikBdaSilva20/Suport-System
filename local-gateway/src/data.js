@@ -6,6 +6,11 @@ function isElevated(role) {
   return role === 'admin' || role === 'manager';
 }
 
+function isRoleAllowed(table, operation, role) {
+  const roles = table.writeRoles?.[operation];
+  return !roles || roles.includes(role);
+}
+
 export const dataRouter = Router();
 
 dataRouter.get('/:table', async (req, res) => {
@@ -29,7 +34,7 @@ dataRouter.post('/:table', async (req, res) => {
   const tableName = req.params.table;
   const table = TABLES[tableName];
   if (!table) return res.status(404).type('text/plain').send(`Tabela desconhecida: ${tableName}`);
-  if (table.writeRoles && !table.writeRoles.includes(req.user.role)) {
+  if (!isRoleAllowed(table, 'create', req.user.role)) {
     return res.status(403).type('text/plain').send('Sem permissão para criar registros nesta tabela.');
   }
 
@@ -65,7 +70,7 @@ dataRouter.patch('/:table/:id', async (req, res) => {
   if (table.hasOwner && !isElevated(req.user.role) && existing.owner_id !== req.user.id) {
     return res.status(403).type('text/plain').send('Você só pode editar os próprios registros.');
   }
-  if (table.writeRoles && !table.writeRoles.includes(req.user.role)) {
+  if (!isRoleAllowed(table, 'update', req.user.role)) {
     return res.status(403).type('text/plain').send('Sem permissão para editar esta tabela.');
   }
 
@@ -92,7 +97,7 @@ dataRouter.delete('/:table/:id', async (req, res) => {
   if (table.hasOwner && !isElevated(req.user.role) && existing.owner_id !== req.user.id) {
     return res.status(403).type('text/plain').send('Você só pode excluir os próprios registros.');
   }
-  if (table.writeRoles && !table.writeRoles.includes(req.user.role)) {
+  if (!isRoleAllowed(table, 'delete', req.user.role)) {
     return res.status(403).type('text/plain').send('Sem permissão para excluir nesta tabela.');
   }
 

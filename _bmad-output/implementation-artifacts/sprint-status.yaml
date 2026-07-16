@@ -171,11 +171,11 @@ development_status:
   epic-9-retrospective: optional
 
   # ---- Block 8 ----
-  epic-10: in-progress
+  epic-10: done
   10-1-menu-do-rep-mostra-so-meus-chamados: done # src/lib/nav-items.ts (getNavItems, testado) + AppLayout.tsx consumindo a função por role
-  10-2-rotas-de-gestao-bloqueadas-para-rep-por-url-direta: ready-for-dev
-  10-3-home-do-rep-lista-dos-proprios-chamados-mais-botao-abrir-chamado: done # TicketsScreen.tsx: sem Kanban/coluna Cliente pro rep, descrição em preview na linha, header "Meus Chamados"/"Abrir chamado". 10.2 (guard de rota direta) continua pendente.
-  10-4-editar-excluir-cliente-restrito-a-admin: ready-for-dev
+  10-2-rotas-de-gestao-bloqueadas-para-rep-por-url-direta: done # RequireStaff em src/lib/auth.tsx (mesmo padrão de RequireAdmin), aplicado a /dashboard e /tickets/kanban em App.tsx; RootRedirect leva rep direto pra /tickets em vez de /dashboard
+  10-3-home-do-rep-lista-dos-proprios-chamados-mais-botao-abrir-chamado: done # TicketsScreen.tsx: sem Kanban/coluna Cliente pro rep, descrição em preview na linha, header "Meus Chamados"/"Abrir chamado"
+  10-4-editar-excluir-cliente-restrito-a-admin: done # CustomersScreen/CustomerDetailScreen: editar+excluir admin-only na UI, excluir trava se cliente tem tickets (FK on delete restrict). Reforçado no local-gateway: writeRoles virou por-operação (create/update/delete) em tables.js/data.js — manager não editava/excluía antes nem no backend, só a UI escondia; ticket delete (já admin-only na UI) ganhou a mesma trava real no gateway
   epic-10-retrospective: optional
 
 # Nota técnica 2026-07-15: tsconfig.json/tsconfig.app.json/tsconfig.node.json tinham
