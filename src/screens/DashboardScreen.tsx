@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ComplaintsSummaryCard } from '@/components/ComplaintsSummaryCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { CheckCircle2, CircleDot, Clock } from 'lucide-react';
@@ -53,7 +54,7 @@ export default function DashboardScreen() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-status-open/30 bg-status-open/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Abertos</CardTitle>
@@ -89,6 +90,7 @@ export default function DashboardScreen() {
             <div className="text-3xl font-bold text-foreground">{counts.resolved}</div>
           </CardContent>
         </Card>
+        <ComplaintsSummaryCard />
       </div>
 
       <div className="rounded-lg border border-border bg-card p-4 space-y-3">

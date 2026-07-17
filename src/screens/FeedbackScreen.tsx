@@ -273,7 +273,7 @@ function StaffFeedbackView() {
       {triageFeedbacks.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhum feedback recebido ainda.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-3">
           {triageFeedbacks.map((f) => {
             const customer = customersByOwner.get(f.owner_id) ?? null;
             const whatsappLink = buildFeedbackWhatsAppLink(customer, f);
