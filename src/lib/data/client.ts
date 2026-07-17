@@ -156,10 +156,7 @@ export const auth = {
     await api('POST', '/api/auth/sign-out');
   },
   async me(): Promise<AuthSession | null> {
-    // window.__MASI_PREVIEW_SESSION__ permite a um harness de preview (ex: modo
-    // demo em src/mock/) sobrescrever qual sessão o preview usa; sem harness,
-    // cai na sessão fixa de sempre (Sandpack).
-    if (isPreview) return window.__MASI_PREVIEW_SESSION__ ?? PREVIEW_SESSION;
+    if (isPreview) return PREVIEW_SESSION;
     try {
       return await api<AuthSession>('GET', '/api/auth/me');
     } catch {
