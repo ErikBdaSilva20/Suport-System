@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ComplaintsCard } from '@/components/ComplaintsCard';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/PhoneInput';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -168,6 +169,8 @@ export default function TicketsScreen() {
           </Button>
         </div>
       </div>
+
+      <ComplaintsCard />
 
       {myCustomer && (
         <div className="rounded-lg border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

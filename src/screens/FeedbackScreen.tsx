@@ -9,41 +9,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
 import type { Customer } from '@/lib/data/customers.repo';
 import { listCustomers } from '@/lib/data/customers.repo';
-import { createFeedback, listFeedback, type Feedback } from '@/lib/data/feedback.repo';
+import { createFeedback, listFeedback, updateFeedback, type Feedback } from '@/lib/data/feedback.repo';
 import type { FeedbackChannel } from '@/lib/data/types.gen';
-import { Loader2, Send } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-const FEEDBACK_CATEGORIES = ['Atendimento', 'Produto', 'Reclamação', 'Sugestão'];
-
-export const CHANNEL_LABEL: Record<FeedbackChannel, string> = {
-  urgent: 'Preciso de contato',
-  general: 'Feedback geral',
-};
-export const STATUS_LABEL: Record<Feedback['status'], string> = {
-  open: 'Aberto',
-  read: 'Lido',
-  resolved: 'Resolvido',
-};
-export const STATUS_TONE: Record<Feedback['status'], string> = {
-  open: 'bg-status-open text-white border-transparent',
-  read: 'bg-status-pending text-white border-transparent',
-  resolved: 'bg-status-resolved text-white border-transparent',
-};
+import {
+  CHANNEL_LABEL,
+  COMPLAINT_CATEGORY,
+  FEEDBACK_CATEGORIES,
+  STATUS_LABEL,
+  STATUS_TONE,
+} from '@/utils/feedback-labels';
+import { buildFeedbackWhatsAppLink } from '@/utils/whatsapp';
+import { Loader2, MessageCircle, Send } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('pt-BR', {
@@ -202,56 +184,79 @@ function RepFeedbackView() {
 // customer_id — owner_id É o user.id do rep, o mesmo valor que customers.owner_id
 // já usa pro próprio cadastro do rep. Resolver "cliente" é achar o customer
 // cujo owner_id bate com o owner_id do feedback (list-then-find, NFR8).
+//
+// 'Reclamação' fica de fora desta triagem: vira caso de atendimento e é
+// exibida só pro admin, em ComplaintsCard dentro de TicketsScreen — não faz
+// sentido reclamação de cliente ficar misturada com sugestão/elogio aqui.
 function StaffFeedbackView() {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    const [feedbackResult, customersResult] = await Promise.allSettled([
+      listFeedback(),
+      listCustomers(),
+    ]);
+
+    if (feedbackResult.status === 'fulfilled') {
+      setFeedbacks(feedbackResult.value.sort((a, b) => b.created_at.localeCompare(a.created_at)));
+    } else {
+      toast({
+        title: 'Erro ao carregar feedbacks',
+        description: feedbackResult.reason.message,
+        variant: 'destructive',
+      });
+    }
+
+    if (customersResult.status === 'fulfilled') {
+      setCustomers(customersResult.value);
+    } else {
+      toast({
+        title: 'Erro ao carregar clientes',
+        description: customersResult.reason.message,
+        variant: 'destructive',
+      });
+    }
+
+    setIsLoading(false);
+  }, [toast]);
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      const [feedbackResult, customersResult] = await Promise.allSettled([
-        listFeedback(),
-        listCustomers(),
-      ]);
-
-      if (feedbackResult.status === 'fulfilled') {
-        setFeedbacks(feedbackResult.value.sort((a, b) => b.created_at.localeCompare(a.created_at)));
-      } else {
-        toast({
-          title: 'Erro ao carregar feedbacks',
-          description: feedbackResult.reason.message,
-          variant: 'destructive',
-        });
-      }
-
-      if (customersResult.status === 'fulfilled') {
-        setCustomers(customersResult.value);
-      } else {
-        toast({
-          title: 'Erro ao carregar clientes',
-          description: customersResult.reason.message,
-          variant: 'destructive',
-        });
-      }
-
-      setIsLoading(false);
-    };
     load();
-  }, [toast]);
+  }, [load]);
 
   const customersByOwner = useMemo(
     () => new Map(customers.map((c) => [c.owner_id, c])),
     [customers]
   );
 
+  const triageFeedbacks = useMemo(
+    () => feedbacks.filter((f) => f.category !== COMPLAINT_CATEGORY),
+    [feedbacks]
+  );
+
+  const handleUpdateStatus = async (feedback: Feedback, status: Feedback['status']) => {
+    setUpdatingId(feedback.id);
+    try {
+      await updateFeedback(feedback.id, { status });
+      await load();
+    } catch (e: any) {
+      toast({ title: 'Erro ao atualizar status', description: e.message, variant: 'destructive' });
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     );
   }
@@ -260,54 +265,82 @@ function StaffFeedbackView() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Feedbacks</h1>
-        <p className="text-sm text-muted-foreground mt-1">{feedbacks.length} feedbacks recebidos</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {triageFeedbacks.length} feedbacks recebidos
+        </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Canal</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead className="text-right">Criado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {feedbacks.map((f) => (
-              <TableRow
-                key={f.id}
-                className="hover:bg-accent/50 cursor-pointer"
-                onClick={() => navigate(`/feedback/${f.id}`)}
-              >
-                <TableCell className="text-sm text-foreground">{f.category ?? '—'}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{CHANNEL_LABEL[f.channel]}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={STATUS_TONE[f.status]}>
-                    {STATUS_LABEL[f.status]}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {customersByOwner.get(f.owner_id)?.name ?? '—'}
-                </TableCell>
-                <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                  {formatDate(f.created_at)}
-                </TableCell>
-              </TableRow>
-            ))}
-            {feedbacks.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">
-                  Nenhum feedback recebido ainda.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {triageFeedbacks.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhum feedback recebido ainda.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {triageFeedbacks.map((f) => {
+            const customer = customersByOwner.get(f.owner_id) ?? null;
+            const whatsappLink = buildFeedbackWhatsAppLink(customer, f);
+            const isUpdating = updatingId === f.id;
+            return (
+              <div key={f.id} className="rounded-lg border border-border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{f.category ?? '—'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {customer?.name ?? 'Cliente não identificado'} ·{' '}
+                      {formatDate(f.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="outline">{CHANNEL_LABEL[f.channel]}</Badge>
+                    <Badge variant="outline" className={STATUS_TONE[f.status]}>
+                      {STATUS_LABEL[f.status]}
+                    </Badge>
+                  </div>
+                </div>
+
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                  {f.message}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {f.status === 'open' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isUpdating}
+                      onClick={() => handleUpdateStatus(f, 'read')}
+                    >
+                      {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />} Marcar
+                      como lido
+                    </Button>
+                  )}
+                  {f.status !== 'resolved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isUpdating}
+                      onClick={() => handleUpdateStatus(f, 'resolved')}
+                    >
+                      {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />} Marcar
+                      como resolvido
+                    </Button>
+                  )}
+                  {whatsappLink && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 text-sla-ok border-sla-ok/40 hover:bg-sla-ok/10"
+                      asChild
+                    >
+                      <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

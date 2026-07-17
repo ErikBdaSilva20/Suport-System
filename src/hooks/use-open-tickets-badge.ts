@@ -4,26 +4,14 @@ import { listTickets } from '@/lib/data/tickets.repo';
 import { useCallback, useEffect, useState } from 'react';
 
 const POLL_INTERVAL_MS = 30_000;
-const SEEN_TICKETS_STORAGE_KEY = 'hd_seen_tickets';
-const SEEN_FEEDBACK_STORAGE_KEY = 'hd_seen_feedback';
+const SEEN_STORAGE_KEY = 'hd_seen_tickets';
 
-function getSeenIds(storageKey: string): Set<string> {
+function getSeenTicketIds(): Set<string> {
   try {
-    const raw = localStorage.getItem(storageKey);
+    const raw = localStorage.getItem(SEEN_STORAGE_KEY);
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
   } catch {
     return new Set();
-  }
-}
-
-function markSeen(storageKey: string, id: string): void {
-  const seen = getSeenIds(storageKey);
-  if (seen.has(id)) return;
-  seen.add(id);
-  try {
-    localStorage.setItem(storageKey, JSON.stringify([...seen]));
-  } catch {
-    // localStorage indisponível (modo privado/quota) — badge só perde a supressão local
   }
 }
 
@@ -31,29 +19,34 @@ function markSeen(storageKey: string, id: string): void {
 // destaque enquanto o ticket continuar `open` — a contagem em si sempre
 // depende do status real.
 export function markTicketSeen(id: string): void {
-  markSeen(SEEN_TICKETS_STORAGE_KEY, id);
-}
-
-// Mesma ideia de markTicketSeen, mas pro canal 'urgent' de customer_feedback
-// (Story 11.7) — contador independente do de tickets.
-export function markFeedbackSeen(id: string): void {
-  markSeen(SEEN_FEEDBACK_STORAGE_KEY, id);
+  const seen = getSeenTicketIds();
+  if (seen.has(id)) return;
+  seen.add(id);
+  try {
+    localStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify([...seen]));
+  } catch {
+    // localStorage indisponível (modo privado/quota) — badge só perde a supressão local
+  }
 }
 
 // Contagem de tickets `open` ainda não vistos individualmente, para o sino de
 // notificação do header. Poll simples (sem WebSocket/realtime, NFR7) — refetch
 // no mount, a cada POLL_INTERVAL_MS e quando a aba recupera o foco.
 // `null` enquanto a primeira resposta não chega (evita "flash" de 0 no header).
-// Pra admin, soma também feedback `channel='urgent'` `status='open'` ainda não
-// visto — manager não tem acesso ao canal urgente, então não entra na conta
-// (nem tenta buscar: o gateway já filtraria, mas evita o request à toa).
+// Pra admin, soma também feedback `channel='urgent'` `status='open'` — manager
+// não tem acesso ao canal urgente, então não entra na conta (nem tenta buscar:
+// o gateway já filtraria, mas evita o request à toa). Diferente de tickets,
+// feedback não tem um "espiado" próprio: os cards de /feedback já mostram a
+// mensagem inteira na lista, então a única forma de sair da contagem é o
+// admin de fato marcar como lido/resolvido (ação explícita, sem estado
+// paralelo em localStorage pra manter em sincronia).
 export function useOpenTicketsBadge(enabled: boolean, role: Role | undefined): number | null {
   const [count, setCount] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const tickets = await listTickets();
-      const seenTickets = getSeenIds(SEEN_TICKETS_STORAGE_KEY);
+      const seenTickets = getSeenTicketIds();
       const openTicketsCount = tickets.filter(
         (t) => t.status === 'open' && !seenTickets.has(t.id)
       ).length;
@@ -64,9 +57,8 @@ export function useOpenTicketsBadge(enabled: boolean, role: Role | undefined): n
       }
 
       const feedbacks = await listFeedback();
-      const seenFeedback = getSeenIds(SEEN_FEEDBACK_STORAGE_KEY);
       const urgentFeedbackCount = feedbacks.filter(
-        (f) => f.channel === 'urgent' && f.status === 'open' && !seenFeedback.has(f.id)
+        (f) => f.channel === 'urgent' && f.status === 'open'
       ).length;
       setCount(openTicketsCount + urgentFeedbackCount);
     } catch {
