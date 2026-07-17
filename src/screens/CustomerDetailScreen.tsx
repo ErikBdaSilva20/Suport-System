@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/PhoneInput';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -94,7 +95,7 @@ export default function CustomerDetailScreen() {
     try {
       await updateCustomer(customer.id, {
         name: editName.trim(),
-        phone_e164: editPhone.replace(/\D/g, ''),
+        phone_e164: editPhone,
         email: editEmail.trim() || null,
         notes: editNotes.trim() || null,
       });
@@ -259,11 +260,7 @@ export default function CustomerDetailScreen() {
             </div>
             <div className="space-y-1.5">
               <Label>Telefone (WhatsApp) *</Label>
-              <Input
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
+              <PhoneInput value={editPhone} onChange={setEditPhone} />
             </div>
             <div className="space-y-1.5">
               <Label>E-mail</Label>

@@ -11,6 +11,17 @@ function isRoleAllowed(table, operation, role) {
   return !roles || roles.includes(role);
 }
 
+const DUPLICATE_MESSAGES = {
+  idx_customers_phone_unique: 'Já existe um cliente cadastrado com esse telefone.',
+  idx_customers_email_unique: 'Já existe um cliente cadastrado com esse e-mail.',
+};
+
+// unique_violation (23505) do Postgres -> mensagem legível, em vez de vazar o erro do driver.
+function friendlyDuplicateError(err) {
+  if (err.code !== '23505') return null;
+  return DUPLICATE_MESSAGES[err.constraint] ?? 'Já existe um registro com esses dados.';
+}
+
 export const dataRouter = Router();
 
 dataRouter.get('/:table', async (req, res) => {
@@ -50,11 +61,17 @@ dataRouter.post('/:table', async (req, res) => {
 
   const columnList = columns.map(c => `"${c}"`).join(', ');
   const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-  const { rows } = await pool.query(
-    `insert into "${tableName}" (${columnList}) values (${placeholders}) returning *`,
-    values,
-  );
-  res.status(201).json(rows[0]);
+  try {
+    const { rows } = await pool.query(
+      `insert into "${tableName}" (${columnList}) values (${placeholders}) returning *`,
+      values,
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    const friendly = friendlyDuplicateError(err);
+    if (friendly) return res.status(409).type('text/plain').send(friendly);
+    throw err;
+  }
 });
 
 async function loadOwnedRow(tableName, id) {
@@ -82,11 +99,17 @@ dataRouter.patch('/:table/:id', async (req, res) => {
 
   const setClause = columns.map((c, i) => `"${c}" = $${i + 2}`).join(', ');
   const values = columns.map(c => body[c]);
-  const { rows } = await pool.query(
-    `update "${tableName}" set ${setClause} where id = $1 returning *`,
-    [req.params.id, ...values],
-  );
-  res.json(rows[0]);
+  try {
+    const { rows } = await pool.query(
+      `update "${tableName}" set ${setClause} where id = $1 returning *`,
+      [req.params.id, ...values],
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    const friendly = friendlyDuplicateError(err);
+    if (friendly) return res.status(409).type('text/plain').send(friendly);
+    throw err;
+  }
 });
 
 dataRouter.delete('/:table/:id', async (req, res) => {

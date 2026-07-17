@@ -42,6 +42,7 @@ docker/init/             # bootstrap do banco local (mock da tabela "user" + apl
 ## 💻 Desenvolvimento local
 
 ### Opção A — contra o gateway real
+
 Se você tiver acesso a uma instância do `tenant-gateway` (ex: `https://masi-tenant-gateway.fly.dev`)
 já com um tenant provisionado:
 
@@ -108,4 +109,4 @@ npm run lint    # eslint
 ## 📄 Créditos
 
 Base gerada originalmente com [Lovable](https://lovable.dev); migrado para a fundação
-`tenant-gateway + Neon + Better-Auth` do hub Masia (ver `Importantdoc.md`).
+`tenant-gateway + Neon + Better-Auth` do hub Masia.

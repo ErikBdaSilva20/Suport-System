@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/PhoneInput';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -93,10 +94,9 @@ export default function TicketNewScreen() {
     }
     setCreatingCustomer(true);
     try {
-      const digits = newPhone.replace(/\D/g, '');
       const customer = await createCustomer({
         name: newName.trim(),
-        phone_e164: digits,
+        phone_e164: newPhone,
         email: newEmail.trim() || null,
       });
       setCustomers((prev) => [...prev, customer]);
@@ -151,7 +151,7 @@ export default function TicketNewScreen() {
         ? (
             await createCustomer({
               name: ownName.trim(),
-              phone_e164: ownPhone.replace(/\D/g, ''),
+              phone_e164: ownPhone,
               email: session?.user.email ?? null,
             })
           ).id
@@ -204,11 +204,7 @@ export default function TicketNewScreen() {
               </div>
               <div className="space-y-2">
                 <Label>Seu telefone (WhatsApp)</Label>
-                <Input
-                  value={ownPhone}
-                  onChange={(e) => setOwnPhone(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                />
+                <PhoneInput value={ownPhone} onChange={setOwnPhone} />
               </div>
             </div>
           )
@@ -336,11 +332,7 @@ export default function TicketNewScreen() {
             </div>
             <div className="space-y-1.5">
               <Label>Telefone (WhatsApp) *</Label>
-              <Input
-                value={newPhone}
-                onChange={(e) => setNewPhone(e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
+              <PhoneInput value={newPhone} onChange={setNewPhone} />
             </div>
             <div className="space-y-1.5">
               <Label>E-mail (opcional)</Label>

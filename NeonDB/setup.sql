@@ -30,6 +30,10 @@ create table if not exists customers (
 );
 create index if not exists idx_customers_owner on customers(owner_id);
 create index if not exists idx_customers_phone on customers(phone_e164);
+-- Sem dois clientes com o mesmo telefone/e-mail. E-mail é opcional — índice
+-- parcial ignora nulls, senão um segundo cliente sem e-mail nunca conseguiria salvar.
+create unique index if not exists idx_customers_phone_unique on customers(phone_e164);
+create unique index if not exists idx_customers_email_unique on customers(email) where email is not null;
 
 -- ============ TICKETS ============
 -- Chamado propriamente dito.
@@ -86,18 +90,8 @@ create table if not exists customer_feedback (
 create index if not exists idx_customer_feedback_owner on customer_feedback(owner_id);
 create index if not exists idx_customer_feedback_channel on customer_feedback(channel);
 
--- ============ SETTINGS ============
--- Configuração do tenant (nome da empresa, cor primária). Tabela "lookup" de
--- tenant único — sem owner_id; leitura liberada, escrita só admin/manager
--- via regra do gateway em tabelas sem owner_id.
-create table if not exists settings (
-  id             uuid primary key default gen_random_uuid(),
-  company_name   text not null default 'Minha Empresa',
-  created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now()
-);
--- Sem uso real na UI (nunca aplicada em nenhuma tela) — remove se já existir de uma execução anterior.
-alter table settings drop column if exists primary_color;
+-- Sem uso real (nome da empresa nunca foi aplicado em nenhuma tela) — remove se já existir de uma execução anterior.
+drop table if exists settings cascade;
 
 -- ============ TRIGGERS updated_at ============
 create or replace function touch_updated_at() returns trigger as $$
@@ -111,10 +105,6 @@ create trigger t_customers_updated before update on customers
 
 drop trigger if exists t_tickets_updated on tickets;
 create trigger t_tickets_updated before update on tickets
-  for each row execute function touch_updated_at();
-
-drop trigger if exists t_settings_updated on settings;
-create trigger t_settings_updated before update on settings
   for each row execute function touch_updated_at();
 
 drop trigger if exists t_customer_feedback_updated on customer_feedback;

@@ -14,7 +14,7 @@ function buildWhatsAppUrl(phone: string, text: string): string {
 }
 
 function buildGreeting(customerName: string, ticketNumber: number, subject: string): string {
-  return `Olá ${customerName}, sobre o chamado #${ticketNumber}: ${subject}`;
+  return `Olá, ${customerName}, Me chamo ----- e vou dar continuidade ao seu atendimento. Estou entrando em contato sobre o chamado #${ticketNumber}: ${subject}. Conte-me mais sobre seu problema ou duvida.`;
 }
 
 /**

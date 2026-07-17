@@ -2,20 +2,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/data/client';
-import type { AppSettings } from '@/lib/data/settings.repo';
-import { createSettings, listSettings, updateSettings } from '@/lib/data/settings.repo';
 import { Copy, Info, Loader2, UserPlus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function SettingsScreen() {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [companyName, setCompanyName] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
@@ -24,43 +17,6 @@ export default function SettingsScreen() {
     email: string;
     temporaryPassword: string;
   } | null>(null);
-
-  useEffect(() => {
-    listSettings()
-      .then((rows) => {
-        const first = rows[0] ?? null;
-        setSettings(first);
-        if (first) {
-          setCompanyName(first.company_name);
-        }
-      })
-      .catch((e) =>
-        toast({
-          title: 'Erro ao carregar configurações',
-          description: e.message,
-          variant: 'destructive',
-        })
-      )
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      if (settings) {
-        const updated = await updateSettings(settings.id, { company_name: companyName });
-        setSettings(updated);
-      } else {
-        const created = await createSettings({ company_name: companyName });
-        setSettings(created);
-      }
-      toast({ title: 'Configurações salvas', variant: 'success' });
-    } catch (e: any) {
-      toast({ title: 'Erro ao salvar', description: e.message, variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleCreateEmployee = async () => {
     if (!employeeName.trim() || !employeeEmail.trim()) {
@@ -96,8 +52,6 @@ export default function SettingsScreen() {
     toast({ title: 'Copiado', variant: 'success' });
   };
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
-
   return (
     <div className="space-y-6 max-w-xl">
       <div>
@@ -105,20 +59,6 @@ export default function SettingsScreen() {
         <p className="text-sm text-muted-foreground mt-1">
           Preferências da sua central de atendimento
         </p>
-      </div>
-
-      <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-        <div className="space-y-2">
-          <Label>Nome da empresa</Label>
-          <Input
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="Minha Empresa"
-          />
-        </div>
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
-        </Button>
       </div>
 
       <div className="space-y-4 rounded-lg border border-border bg-card p-4">

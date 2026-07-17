@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ["requirements-extracted", "epics-designed", "stories-created"]
+stepsCompleted: ['requirements-extracted', 'epics-designed', 'stories-created']
 inputDocuments:
   - Importantdoc.md
   - doc/00-visao-geral.md
@@ -37,7 +37,6 @@ FR5: Manager/admin marca um chamado como concluído (`status → resolved`, `res
 FR6: Manager/admin adiciona notas internas (`ticket_notes`) descrevendo o que foi tratado no WhatsApp.
 FR7: Rep/manager/admin cadastra um cliente (nome, telefone E.164, e-mail opcional, notas) ao abrir o chamado.
 FR8: Manager/admin lista e visualiza detalhes de clientes cadastrados.
-FR9: Admin configura nome da empresa e cor primária em `/settings`.
 FR10: O 1º usuário do tenant vira admin automaticamente; os demais entram como `rep`; admin promove alguém a `manager`.
 FR11: Rep, ao logar, acessa direto uma tela enxuta "Meus Chamados" (só os próprios tickets + botão "Abrir chamado") — sem Dashboard/KPIs, Kanban nem Clientes no menu.
 FR12: Apenas admin edita ou exclui um cadastro de cliente; manager visualiza e cria clientes normalmente (fluxo manual de abertura de chamado).
@@ -64,21 +63,21 @@ NFR10: `masi.template.json` declara `engine: "vite-react-gateway"`, `envContract
 
 ### FR Coverage Map
 
-| Requisito | Épico |
-|---|---|
-| FR1, FR7 | Epic 5, Epic 6 |
-| FR2, FR10 | Epic 6 |
-| FR3, FR5, FR6 | Epic 5, Epic 6 |
-| FR4 | Epic 7 |
-| FR8, FR9 | Epic 5 |
-| NFR1, NFR7, NFR8 | Epic 5 |
-| NFR2, NFR3 | Epic 4, Epic 6 |
-| NFR4 | Epic 2 |
-| NFR5 | Epic 2, Epic 3 |
-| NFR6 | Epic 2, Epic 3, Epic 7 |
-| NFR9, NFR10 | Epic 8 |
-| FR11 | Epic 10 |
-| FR12 | Epic 10 |
+| Requisito        | Épico                  |
+| ---------------- | ---------------------- |
+| FR1, FR7         | Epic 5, Epic 6         |
+| FR2, FR10        | Epic 6                 |
+| FR3, FR5, FR6    | Epic 5, Epic 6         |
+| FR4              | Epic 7                 |
+| FR8, FR9         | Epic 5                 |
+| NFR1, NFR7, NFR8 | Epic 5                 |
+| NFR2, NFR3       | Epic 4, Epic 6         |
+| NFR4             | Epic 2                 |
+| NFR5             | Epic 2, Epic 3         |
+| NFR6             | Epic 2, Epic 3, Epic 7 |
+| NFR9, NFR10      | Epic 8                 |
+| FR11             | Epic 10                |
+| FR12             | Epic 10                |
 
 ## Epic List
 
@@ -92,6 +91,7 @@ NFR10: `masi.template.json` declara `engine: "vite-react-gateway"`, `envContract
 8. Manifest do template e contrato do hub
 9. Publish, catálogo e QA end-to-end
 10. Telas por papel (Admin / Manager / Cliente)
+11. Feedback do cliente (dois canais: contato direto vs geral)
 
 ---
 
@@ -170,7 +170,7 @@ para eliminar toda dependência de IA no backend do app.
 **Then** nenhuma chamada `supabase.functions.invoke(...)` para essas funções permanece no código de app
 **And** `LOVABLE_API_KEY` e chamadas a `https://ai.gateway.lovable.dev` não existem mais no repositório
 
-*(Nota: a lista da auditoria tem 9 nomes de função na seção de IA — story cobre todos.)*
+_(Nota: a lista da auditoria tem 9 nomes de função na seção de IA — story cobre todos.)_
 [Source: doc/02-remover-ia.md#2.1, #2.5]
 
 ### Story 2.2: Remover as Edge Functions de e-mail/Zendesk
@@ -724,7 +724,7 @@ para confirmar que a migração está completa e segura.
 
 ## Epic 10: Telas por papel (Admin / Manager / Cliente)
 
-O Epic 6 já diferenciou papéis em nível de *botão* (Atender/Concluir/WhatsApp escondidos do rep, exclusão de ticket só admin, `/settings` só admin). O que falta é a diferenciação em nível de *tela/navegação*: hoje o rep (cliente) enxerga o mesmo menu de manager/admin — Dashboard com KPIs, Tickets, Kanban e Clientes — o que não faz sentido pra quem só deveria abrir e acompanhar o próprio chamado. Este epic fecha essa lacuna.
+O Epic 6 já diferenciou papéis em nível de _botão_ (Atender/Concluir/WhatsApp escondidos do rep, exclusão de ticket só admin, `/settings` só admin). O que falta é a diferenciação em nível de _tela/navegação_: hoje o rep (cliente) enxerga o mesmo menu de manager/admin — Dashboard com KPIs, Tickets, Kanban e Clientes — o que não faz sentido pra quem só deveria abrir e acompanhar o próprio chamado. Este epic fecha essa lacuna.
 
 **Decisão confirmada pelo usuário:** não existirão três componentes de tela separados (`AdminScreen`/`ManagerScreen`/`ClientScreen`). Manager e admin continuam nas mesmas telas (`DashboardScreen`, `TicketsScreen`, `TicketKanbanScreen`, `CustomersScreen`), diferenciadas por condicionais de `role` — o mesmo padrão já usado em `TicketsScreen.tsx:45` (`isAdmin`) e `TicketDetailScreen.tsx:58` (`isRep`). O rep ganha uma navegação própria, bem mais enxuta, reaproveitando a `TicketsScreen`/`TicketNewScreen` existentes.
 
@@ -793,6 +793,150 @@ para evitar que manager altere ou apague um contato por engano.
 **And** admin mantém acesso total (ver, criar, editar, excluir)
 
 [Source: src/screens/CustomersScreen.tsx; src/screens/TicketsScreen.tsx#45,129,148; doc/07-papeis-rep-manager-admin.md#7.4]
+
+---
+
+## Epic 11: Feedback do cliente (dois canais: contato direto vs geral)
+
+**Status: planejado, não iniciado.** Sessão anterior parou aqui por limite de contexto — nenhum código foi escrito ainda, só o desenho abaixo. Retomar lendo este épico inteiro antes de codar qualquer coisa.
+
+Novo canal pro rep (cliente) enviar feedback sobre atendimento, produto ou reclamações — dois níveis de visibilidade em vez de um só campo livre:
+
+- **"Preciso de contato"** (`channel = 'urgent'`): visível **só pro admin**, sinaliza que alguém precisa retornar o contato (ex: reclamação séria).
+- **"Feedback geral"** (`channel = 'general'`): visível pra **manager e admin**, sem necessidade de retorno — avaliação, sugestão, elogio, reclamação leve.
+
+Rótulos confirmados com o usuário (não trocar sem confirmar de novo): "Preciso de contato" / "Feedback geral" — evita expor a hierarquia interna (admin vs manager) pro rep, foca na consequência prática pra ele.
+
+### Decisões já confirmadas pelo usuário
+
+1. Rótulos dos canais: "Preciso de contato" vs "Feedback geral" (não "Urgente"/"Geral" — colidiria com o conceito de prioridade de ticket, que já existe e significa outra coisa).
+2. Sino de notificação do header (`src/hooks/use-open-tickets-badge.ts`, já usado em `AppLayout.tsx`) é **reaproveitado**: passa a somar feedback `channel='urgent'` ainda não visto à contagem, mas **só pra admin** (manager não tem acesso ao canal urgente, não deve ver essa contagem).
+3. Tela de detalhe do feedback ganha o mesmo botão "Abrir conversa no WhatsApp" que já existe em `TicketDetailScreen.tsx`, reaproveitando `src/utils/whatsapp.ts` (`buildWhatsAppLink`) — não reinventar.
+
+### Decisão arquitetural (motor genérico do gateway)
+
+O modelo de visibilidade atual do `local-gateway` (`data.js`) é binário: dono vê só o próprio (`owner_id`) OU papel elevado (`admin`/`manager`) vê tudo. `customer_feedback` precisa de **3 níveis**: rep vê só o próprio, manager vê só `channel='general'`, admin vê tudo. Proposta (ainda não implementada): adicionar um campo declarativo `managerFilter` na config de cada tabela em `local-gateway/src/tables.js` (um fragmento SQL aplicado só quando `role === 'manager'`), consumido em `data.js` no `GET /:table` — mantém o motor genérico sem hardcodar "feedback" no meio do roteamento. Mesmo padrão declarativo já usado pra `writeRoles` (Story 10.4).
+
+### Ponto em aberto — precisa validar com o usuário antes de implementar
+
+Hoje o rep não tem sidebar (Story 10.1/RepLayout, `AppLayout.tsx`) porque só existia um destino ("Meus Chamados"). Com feedback, o rep passa a ter **dois** destinos. Proposta não confirmada: adicionar dois links simples no header do `RepLayout` (não trazer de volta a `Sidebar` completa que foi removida) — ver Story 11.6 abaixo. Confirmar esse ponto com o usuário no início da próxima sessão.
+
+### Requirements
+
+FR13: Rep envia feedback (categoria + canal + mensagem).
+FR14: Feedback `channel='urgent'` é visível só pro admin; `channel='general'` é visível pra manager e admin.
+FR15: Rep vê o histórico dos próprios feedbacks enviados.
+FR16: Admin/manager veem lista de feedbacks recebidos, filtrada pelo canal que o papel permite ver, com badges de canal/categoria/status.
+FR17: Admin/manager abrem o WhatsApp do cliente direto da tela de detalhe do feedback.
+FR18: Sino de notificação do header soma feedback `urgent` não visto à contagem de tickets abertos, só pra admin.
+
+### Story 11.1: Schema e repositório de feedback
+
+Como desenvolvedor,
+quero criar a tabela `customer_feedback` (`NeonDB/setup.sql`) e o repositório `src/lib/data/feedback.repo.ts`, seguindo o mesmo padrão de `tickets.repo.ts`,
+para que as telas tenham uma API de dados pronta.
+
+**Acceptance Criteria:**
+
+**Given** `NeonDB/setup.sql` (padrão: `create table if not exists`, índices, trigger `touch_updated_at`)
+**When** a tabela é criada
+**Then** `customer_feedback` tem `id uuid pk`, `owner_id text not null references "user"(id) on delete cascade`, `channel text not null check (channel in ('urgent','general'))`, `category text`, `message text not null`, `status text not null default 'open' check (status in ('open','read','resolved'))`, `created_at`, `updated_at`
+**And** `src/lib/data/types.gen.ts` ganha o `Row` correspondente (mesmo padrão de `Ticket`)
+**And** `feedback.repo.ts` expõe `listFeedback`/`createFeedback`/`updateFeedback`, mesmo formato de `tickets.repo.ts`
+
+[Source: NeonDB/setup.sql; src/lib/data/tickets.repo.ts]
+
+### Story 11.2: Visibilidade em 3 níveis no gateway
+
+Como desenvolvedor,
+quero estender `local-gateway/src/tables.js`/`data.js` com um filtro adicional por tabela pro papel `manager` (`managerFilter`),
+para que `customer_feedback` tenha 3 níveis de visibilidade sem hardcodar a tabela no motor genérico.
+
+**Acceptance Criteria:**
+
+**Given** uma config `customer_feedback: { managerFilter: "channel = 'general'" }` em `tables.js`
+**When** um manager faz `GET /data/customer_feedback`
+**Then** só vê linhas com `channel='general'`
+**And** admin continua vendo todas (urgent + general), rep continua vendo só as próprias (`owner_id`)
+**And** verificado de ponta a ponta via curl contra o Docker local (mesmo padrão das Stories 10.x — criar registro urgent/general, logar como cada papel, conferir o que cada um vê)
+
+[Source: local-gateway/src/data.js; local-gateway/src/tables.js]
+
+### Story 11.3: Rep envia feedback
+
+Como cliente (rep),
+quero preencher um formulário com categoria, canal ("Preciso de contato" / "Feedback geral") e mensagem,
+para relatar minha experiência.
+
+**Acceptance Criteria:**
+
+**Given** uma tela nova de feedback acessível pelo rep
+**When** ele escolhe categoria (Atendimento/Produto/Reclamação/Sugestão), canal e escreve a mensagem
+**Then** o submit cria um `customer_feedback` via `createFeedback`
+**And** abaixo do form, o rep vê o histórico dos próprios feedbacks enviados (lista simples, com status)
+
+[Source: src/screens/TicketNewScreen.tsx — mesmo padrão de formulário]
+
+### Story 11.4: Manager/admin veem a lista de feedbacks
+
+Como manager ou admin,
+quero uma tela `/feedback` listando os feedbacks recebidos, filtrados pelo canal que meu papel permite ver,
+para acompanhar reclamações/sugestões/atendimento.
+
+**Acceptance Criteria:**
+
+**Given** a rota `/feedback` e um item de nav "Feedbacks" (`src/lib/nav-items.ts`, visível pra manager/admin)
+**When** a tela carrega
+**Then** a lista mostra categoria, canal (badge), status, cliente e data
+**And** manager só vê `channel='general'`; admin vê tudo
+
+[Source: src/screens/TicketsScreen.tsx — mesmo padrão de tabela/lista]
+
+### Story 11.5: Detalhe do feedback com WhatsApp e status
+
+Como admin (canal urgente) ou manager (canal geral),
+quero abrir o detalhe de um feedback, ver a mensagem completa, marcar como lido/resolvido, e abrir o WhatsApp do cliente se precisar,
+para dar andamento ao caso.
+
+**Acceptance Criteria:**
+
+**Given** a rota `/feedback/:id`
+**When** a tela carrega
+**Then** mostra a mensagem completa, categoria, canal, status
+**And** o botão "Abrir conversa no WhatsApp" reaproveita `buildWhatsAppLink` (`src/utils/whatsapp.ts`), resolvendo o telefone do cliente pelo `owner_id` do feedback (list-then-find em `customers`, mesmo padrão de `TicketDetailScreen.tsx`)
+**And** há ação pra marcar status (lido/resolvido) via `updateFeedback`
+
+[Source: src/screens/TicketDetailScreen.tsx; src/utils/whatsapp.ts]
+
+### Story 11.6: Navegação do rep com 2 destinos — **requer confirmação do usuário antes de implementar**
+
+Como cliente (rep),
+quero conseguir alternar entre "Meus Chamados" e "Feedback" sem uma sidebar completa,
+para manter a experiência enxuta que já foi construída (Story 10.1).
+
+**Acceptance Criteria:**
+
+**Given** `RepLayout` em `src/components/AppLayout.tsx` (hoje sem sidebar, um único destino)
+**When** o rep tem dois destinos (tickets + feedback)
+**Then** o header do `RepLayout` ganha dois links de navegação simples — **não** a `Sidebar`/`SidebarProvider` completa que foi removida na Story 10.1
+**And** essa abordagem foi validada com o usuário (proposta ainda não confirmada — perguntar no início da implementação)
+
+[Source: src/components/AppLayout.tsx]
+
+### Story 11.7: Sino de notificação inclui feedback urgente
+
+Como admin,
+quero que o sino do header também conte feedbacks "Preciso de contato" ainda não vistos, somados aos tickets abertos,
+para não perder um caso que precisa de retorno.
+
+**Acceptance Criteria:**
+
+**Given** `src/hooks/use-open-tickets-badge.ts` (hoje só conta tickets `open` não vistos, ativo pra `role !== 'rep'`)
+**When** existe feedback `channel='urgent'` com `status='open'` ainda não visto
+**Then** a contagem do sino soma tickets abertos + feedback urgente não visto
+**And** essa soma extra de feedback só aparece pra `role === 'admin'` (manager continua vendo só a contagem de tickets, sem acesso ao canal urgente)
+
+[Source: src/hooks/use-open-tickets-badge.ts; src/components/AppLayout.tsx]
 
 ---
 

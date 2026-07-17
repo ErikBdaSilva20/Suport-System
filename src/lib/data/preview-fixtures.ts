@@ -76,18 +76,8 @@ export const previewTicketNotes: TicketNote[] = [
   },
 ];
 
-export const previewSettings = [
-  {
-    id: 'settings-1',
-    company_name: 'Minha Empresa',
-    created_at: now,
-    updated_at: now,
-  },
-];
-
 export const previewFixtures: Record<string, unknown[]> = {
   customers: previewCustomers,
   tickets: previewTickets,
   ticket_notes: previewTicketNotes,
-  settings: previewSettings,
 };

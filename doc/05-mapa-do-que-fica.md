@@ -4,27 +4,27 @@ Depois de podar IA, e-mail, realtime, KB, SLA, notificações, participantes, an
 
 ## 5.1. Telas (screens)
 
-| Rota | Tela | Papéis |
-|---|---|---|
-| `/login` | Login/Signup Better-Auth | público |
-| `/` (= `/tickets`) | Lista de chamados | rep vê os próprios; manager/admin veem tudo |
-| `/tickets/new` | Abrir chamado | rep, manager, admin |
-| `/tickets/:id` | Detalhe do chamado + botão WhatsApp + mudar status | rep vê os próprios (read); manager/admin editam |
-| `/customers` | Lista de clientes | manager/admin |
-| `/customers/:id` | Detalhe do cliente | manager/admin |
-| `/settings` | Nome da empresa, cor primária (só admin) | admin |
+| Rota               | Tela                                               | Papéis                                          |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------- |
+| `/login`           | Login/Signup Better-Auth                           | público                                         |
+| `/` (= `/tickets`) | Lista de chamados                                  | rep vê os próprios; manager/admin veem tudo     |
+| `/tickets/new`     | Abrir chamado                                      | rep, manager, admin                             |
+| `/tickets/:id`     | Detalhe do chamado + botão WhatsApp + mudar status | rep vê os próprios (read); manager/admin editam |
+| `/customers`       | Lista de clientes                                  | manager/admin                                   |
+| `/customers/:id`   | Detalhe do cliente                                 | manager/admin                                   |
 
 Sem `dashboard`, `kb`, `csat`, `chat`, `automation`, `sla`, `integrations`, `team invite`.
 
 ## 5.2. Tabelas (Neon do tenant)
 
-| Tabela | Descrição | Escrita por |
-|---|---|---|
-| `tickets` | Chamados | rep (só os próprios) + manager/admin |
-| `customers` | Clientes com telefone WhatsApp | manager/admin (rep pode criar ao abrir chamado) |
-| `ticket_notes` | Notas internas do manager sobre o atendimento (opcional) | manager/admin |
+| Tabela         | Descrição                                                | Escrita por                                     |
+| -------------- | -------------------------------------------------------- | ----------------------------------------------- |
+| `tickets`      | Chamados                                                 | rep (só os próprios) + manager/admin            |
+| `customers`    | Clientes com telefone WhatsApp                           | manager/admin (rep pode criar ao abrir chamado) |
+| `ticket_notes` | Notas internas do manager sobre o atendimento (opcional) | manager/admin                                   |
 
 **Tabelas de lookup (read-only pro rep):**
+
 - Nenhuma, se `status` e `priority` viram enums no schema.
 
 ## 5.3. Fluxo completo (o que o usuário descreveu)

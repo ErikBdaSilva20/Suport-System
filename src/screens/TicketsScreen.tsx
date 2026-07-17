@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/PhoneInput';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -23,11 +24,12 @@ import {
 import { useTicketsAndCustomers } from '@/hooks/use-tickets-and-customers';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
+import { updateCustomer } from '@/lib/data/customers.repo';
 import type { Ticket } from '@/lib/data/tickets.repo';
 import { deleteTicket } from '@/lib/data/tickets.repo';
-import { LayoutGrid, Plus, Search, Trash2 } from 'lucide-react';
+import { LayoutGrid, Loader2, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const STATUS_LABEL: Record<string, string> = {
   open: 'Aberto',
@@ -55,6 +57,7 @@ const formatDate = (d: string) =>
   });
 
 export default function TicketsScreen() {
+  const navigate = useNavigate();
   const { session } = useAuth();
   const { toast } = useToast();
   const { tickets, customers, isLoading, reload } = useTicketsAndCustomers();
@@ -64,6 +67,36 @@ export default function TicketsScreen() {
 
   const isAdmin = session?.role === 'admin';
   const isRep = session?.role === 'rep';
+  const myCustomer = isRep ? (customers[0] ?? null) : null;
+
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  const openEditPhone = () => {
+    if (!myCustomer) return;
+    setEditPhone(myCustomer.phone_e164);
+    setEditingPhone(true);
+  };
+
+  const handleSavePhone = async () => {
+    const digits = editPhone.replace(/\D/g, '');
+    if (!myCustomer || !digits) {
+      toast({ title: 'Telefone inválido', variant: 'destructive' });
+      return;
+    }
+    setSavingPhone(true);
+    try {
+      await updateCustomer(myCustomer.id, { phone_e164: digits });
+      await reload();
+      setEditingPhone(false);
+      toast({ title: 'Telefone atualizado', variant: 'success' });
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar telefone', description: e.message, variant: 'destructive' });
+    } finally {
+      setSavingPhone(false);
+    }
+  };
 
   const customersById = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers]);
 
@@ -136,6 +169,42 @@ export default function TicketsScreen() {
         </div>
       </div>
 
+      {myCustomer && (
+        <div className="rounded-lg border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Seu telefone de contato</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              É o número que o suporte usa pra falar com você pelo WhatsApp quando atender um
+              chamado seu.
+            </p>
+          </div>
+          {editingPhone ? (
+            <div className="flex gap-2">
+              <PhoneInput value={editPhone} onChange={setEditPhone} />
+              <Button size="sm" onClick={handleSavePhone} disabled={savingPhone}>
+                {savingPhone && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setEditingPhone(false)}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-foreground">{myCustomer.phone_e164}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={openEditPhone}
+                aria-label="Editar telefone"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="relative w-64">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -166,26 +235,23 @@ export default function TicketsScreen() {
           </TableHeader>
           <TableBody>
             {filtered.map((ticket) => (
-              <TableRow key={ticket.id} className="hover:bg-accent/50">
-                <TableCell>
-                  <Link
-                    to={`/tickets/${ticket.id}`}
-                    className="font-mono text-xs text-muted-foreground"
-                  >
-                    {ticket.number}
-                  </Link>
+              <TableRow
+                key={ticket.id}
+                className="hover:bg-accent/50 cursor-pointer"
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
+              >
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {ticket.number}
                 </TableCell>
                 <TableCell>
-                  <Link to={`/tickets/${ticket.id}`} className="block hover:text-primary">
-                    <span className="text-sm font-medium text-foreground line-clamp-1">
-                      {ticket.subject}
+                  <span className="text-sm font-medium text-foreground line-clamp-1">
+                    {ticket.subject}
+                  </span>
+                  {isRep && ticket.description && (
+                    <span className="block text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                      {ticket.description}
                     </span>
-                    {isRep && ticket.description && (
-                      <span className="block text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                        {ticket.description}
-                      </span>
-                    )}
-                  </Link>
+                  )}
                 </TableCell>
                 {!isRep && (
                   <TableCell className="text-sm text-muted-foreground">
@@ -214,7 +280,10 @@ export default function TicketsScreen() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setTicketToDelete(ticket)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTicketToDelete(ticket);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

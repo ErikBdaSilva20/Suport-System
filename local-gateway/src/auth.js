@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
 import { pool } from './db.js';
+import { hashPassword, verifyPassword } from './password.js';
 
 function generateTemporaryPassword() {
   return crypto.randomBytes(9).toString('base64url');
@@ -79,7 +80,7 @@ authRouter.post('/sign-up/email', async (req, res) => {
 
   const { rows } = await pool.query(
     'insert into "user" (name, email, password, role) values ($1, $2, $3, $4) returning id',
-    [name, email, password, role]
+    [name, email, await hashPassword(password), role]
   );
 
   res.cookie(COOKIE_NAME, rows[0].id, cookieOptions());
@@ -90,7 +91,7 @@ authRouter.post('/sign-in/email', async (req, res) => {
   const { email, password } = req.body ?? {};
   const { rows } = await pool.query('select id, password from "user" where email = $1', [email]);
   const user = rows[0];
-  if (!user || user.password !== password) {
+  if (!user || !(await verifyPassword(password, user.password))) {
     return res.status(401).type('text/plain').send('Email ou senha inválidos.');
   }
 
@@ -135,7 +136,7 @@ authRouter.post('/admin/create-user', async (req, res) => {
   const temporaryPassword = generateTemporaryPassword();
   const { rows } = await pool.query(
     'insert into "user" (name, email, password, role) values ($1, $2, $3, $4) returning id, name, email',
-    [name, email, temporaryPassword, role]
+    [name, email, await hashPassword(temporaryPassword), role]
   );
 
   res.status(201).json({ user: rows[0], role, temporaryPassword });

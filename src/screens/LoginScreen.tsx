@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/PhoneInput';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
 import { auth } from '@/lib/data/client';
@@ -73,7 +74,7 @@ export default function LoginScreen() {
       await refetch();
       await createCustomer({
         name: customerName,
-        phone_e164: customerPhone.replace(/\D/g, ''),
+        phone_e164: customerPhone,
         email: customerEmail,
       });
       navigate('/tickets');
@@ -190,11 +191,10 @@ export default function LoginScreen() {
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="relative">
-                  <Input
-                    type="tel"
+                  <PhoneInput
                     placeholder="Telefone (WhatsApp)"
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    onChange={setCustomerPhone}
                     required
                     className="pl-4 pr-10"
                   />

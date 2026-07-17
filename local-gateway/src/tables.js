@@ -10,7 +10,9 @@ export const TABLES = {
   customers: {
     columns: ['name', 'phone_e164', 'email', 'notes'],
     hasOwner: true,
-    writeRoles: { update: ['admin'], delete: ['admin'] },
+    // rep só edita o próprio registro (a checagem de owner_id em data.js já
+    // garante isso) — manager fica de fora, só admin edita qualquer um.
+    writeRoles: { update: ['admin', 'rep'], delete: ['admin'] },
   },
   tickets: {
     columns: ['customer_id', 'subject', 'description', 'status', 'priority', 'assigned_to', 'resolved_at', 'category'],
@@ -20,11 +22,6 @@ export const TABLES = {
   ticket_notes: {
     columns: ['ticket_id', 'body'],
     hasOwner: true,
-  },
-  settings: {
-    columns: ['company_name'],
-    hasOwner: false,
-    writeRoles: { create: ['admin', 'manager'], update: ['admin', 'manager'] },
   },
   // managerFilter: fragmento SQL aplicado no GET só quando role === 'manager',
   // pra dar um 3º nível de visibilidade além do owner_id/isElevated binário —
