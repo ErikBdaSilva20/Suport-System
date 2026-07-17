@@ -27,7 +27,10 @@ export function buildWhatsAppLink(
   ticket: Pick<Ticket, 'number' | 'subject'>
 ): string | null {
   if (!customer?.phone_e164) return null;
-  return buildWhatsAppUrl(customer.phone_e164, buildGreeting(customer.name, ticket.number, ticket.subject));
+  return buildWhatsAppUrl(
+    customer.phone_e164,
+    buildGreeting(customer.name, ticket.number, ticket.subject)
+  );
 }
 
 /**
@@ -39,7 +42,7 @@ export function buildFeedbackWhatsAppLink(
   feedback: Pick<Feedback, 'category' | 'message'>
 ): string | null {
   if (!customer?.phone_e164) return null;
-  const categorySuffix = feedback.category ? ` (${feedback.category})` : '';
-  const text = `Olá, ${customer.name}, Me chamo ----- e estou entrando em contato sobre seu feedback${categorySuffix}: "${feedback.message}".`;
+  const categorySuffix = feedback.category ? ` ${feedback.category}` : '';
+  const text = `Olá, ${customer.name}, Me chamo ----- e estou entrando em contato sobre seu chamado: ${categorySuffix}: (${feedback.message}). Poderia me passar mais detalhes??.`;
   return buildWhatsAppUrl(customer.phone_e164, text);
 }
