@@ -7,16 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "build:dev": "vite build --mode development",
-    "dev:mock": "vite --mode mock",
-    "build:mock": "vite build --mode mock",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f",
-    "docker:reset": "docker compose down -v"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
