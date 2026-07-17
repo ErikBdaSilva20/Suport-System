@@ -63,5 +63,7 @@ npm run lint    # eslint
 
 ## 📄 Créditos
 
-Base gerada originalmente com [Lovable](https://lovable.dev); migrado para a fundação
-`tenant-gateway + Neon + Better-Auth` do hub Masia.
+Template-base remixado da plataforma [viverdeia.ai](https://viverdeia.ai/) e adaptado
+às necessidades da MasIA (fundação `tenant-gateway + Neon + Better-Auth`). Ver
+[THIRD_PARTY.md](./THIRD_PARTY.md) para a proveniência completa e [LICENSE](./LICENSE)
+para os termos (MIT).
