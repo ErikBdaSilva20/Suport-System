@@ -1,3 +1,10 @@
+// Precisa ser o 1º import do arquivo (fora de ordem alfabética de propósito):
+// ativa window.__MASI_PREVIEW__ antes de qualquer import abaixo puxar
+// '@/lib/auth' → client.ts, que decide o modo preview na avaliação do módulo.
+// Fora do modo demo (VITE_MOCK_MODE ausente) é um no-op — ver src/mock/bootstrap.ts.
+import { isMockMode } from '@/mock/bootstrap';
+import { MockRoleSwitcher } from '@/mock/MockRoleSwitcher';
+
 import AppLayout from '@/components/AppLayout';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
@@ -31,9 +38,17 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        {isMockMode && <MockRoleSwitcher />}
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<LoginScreen />} />
+            {/* Modo demo: sem gateway real pra autenticar de verdade, então /login
+                nem deveria existir de fato — qualquer acesso direto (link, back
+                do navegador) volta pra "/", que já entra logado como o papel
+                escolhido no MockRoleSwitcher. */}
+            <Route
+              path="/login"
+              element={isMockMode ? <Navigate to="/" replace /> : <LoginScreen />}
+            />
             <Route path="/" element={<RootRedirect />} />
             <Route
               element={
