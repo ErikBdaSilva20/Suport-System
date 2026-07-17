@@ -51,7 +51,7 @@ function NotificationBell() {
 }
 
 function AppSidebarContent() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
@@ -59,6 +59,11 @@ function AppSidebarContent() {
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) setOpenMobile(false);
+    else setOpen(false);
   };
 
   const visibleItems = getNavItems(session?.role);
@@ -80,6 +85,7 @@ function AppSidebarContent() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
+                      onClick={handleNavClick}
                       className="text-sidebar-foreground hover:bg-white/10 hover:text-white transition-colors"
                       activeClassName="bg-sidebar-primary text-white font-semibold"
                     >
@@ -137,30 +143,30 @@ function RepLayout() {
 
   return (
     <div className="min-h-screen flex flex-col w-full">
-      <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-4 min-w-0">
-          <span className="text-lg font-bold text-foreground tracking-tight shrink-0">
+      <header className="h-14 flex items-center justify-between gap-2 border-b border-border px-3 sm:px-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <span className="hidden sm:inline text-lg font-bold text-foreground tracking-tight shrink-0">
             HelpDesk
           </span>
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
             <NavLink
               to="/tickets"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 rounded-md px-2 sm:px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="bg-accent text-foreground"
             >
               Meus Chamados
             </NavLink>
             <NavLink
               to="/feedback"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 rounded-md px-2 sm:px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="bg-accent text-foreground"
             >
               Feedback
             </NavLink>
           </nav>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden sm:flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {initials}

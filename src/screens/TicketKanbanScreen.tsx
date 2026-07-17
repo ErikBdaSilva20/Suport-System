@@ -11,6 +11,7 @@ import type { TicketStatus } from '@/lib/data/types.gen';
 import {
   DndContext,
   PointerSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -56,7 +57,7 @@ function KanbanCard({
       style={style}
       {...listeners}
       {...attributes}
-      className={`rounded-md border border-border bg-card p-3 space-y-1.5 ${disabled ? '' : 'cursor-grab active:cursor-grabbing'} ${isDragging ? 'opacity-50' : ''}`}
+      className={`rounded-md border border-border bg-card p-3 space-y-1.5 ${disabled ? '' : 'touch-none cursor-grab active:cursor-grabbing'} ${isDragging ? 'opacity-50' : ''}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs text-muted-foreground">#{ticket.number}</span>
@@ -128,7 +129,10 @@ export default function TicketKanbanScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   const isRep = session?.role === 'rep';
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
+  );
 
   const load = async () => {
     setIsLoading(true);
@@ -188,7 +192,7 @@ export default function TicketKanbanScreen() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-foreground">Kanban de tickets</h1>
         <Button variant="outline" size="sm" className="gap-2" asChild>
           <Link to="/tickets">

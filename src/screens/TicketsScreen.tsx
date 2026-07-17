@@ -145,7 +145,7 @@ export default function TicketsScreen() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {isRep ? 'Meus Chamados' : 'Tickets'}
@@ -154,7 +154,7 @@ export default function TicketsScreen() {
             {isRep ? `${filtered.length} chamados no seu histórico` : `${filtered.length} tickets`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {!isRep && (
             <Button variant="outline" asChild className="gap-2">
               <Link to="/tickets/kanban">
@@ -208,7 +208,7 @@ export default function TicketsScreen() {
         </div>
       )}
 
-      <div className="relative w-64">
+      <div className="relative w-full sm:w-64">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder={
@@ -222,7 +222,53 @@ export default function TicketsScreen() {
         />
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* Mobile: tabela não reflui bem em telas estreitas (colunas disputam
+          espaço e o Assunto acaba espremido) — cards dedicados, com # e
+          Status pequenos no canto, deixam o texto respirar. */}
+      <div className="md:hidden space-y-2">
+        {filtered.map((ticket) => (
+          <div
+            key={ticket.id}
+            className="rounded-lg border border-border bg-card p-3 cursor-pointer hover:bg-accent/50"
+            onClick={() => navigate(`/tickets/${ticket.id}`)}
+          >
+            <div className="flex items-center justify-end gap-1.5 mb-1.5">
+              <span className="font-mono text-[10px] text-muted-foreground">#{ticket.number}</span>
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${STATUS_TONE[ticket.status]}`}>
+                {STATUS_LABEL[ticket.status]}
+              </Badge>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 -mr-1 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTicketToDelete(ticket);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <p className="text-sm font-medium text-foreground">{ticket.subject}</p>
+            {isRep && ticket.description && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ticket.description}</p>
+            )}
+            {!isRep && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {customersById.get(ticket.customer_id)?.name ?? '—'}
+              </p>
+            )}
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p className="text-center text-sm text-muted-foreground py-8">Nenhum ticket encontrado.</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela completa, com todas as colunas. */}
+      <div className="hidden md:block rounded-lg border border-border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

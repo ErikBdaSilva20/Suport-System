@@ -163,9 +163,13 @@ export default function TicketDetailScreen() {
           </Link>
         </Button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-muted-foreground">#{ticket.number}</span>
-            <h1 className="text-lg font-bold text-foreground truncate">{ticket.subject}</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-sm text-muted-foreground shrink-0">
+              #{ticket.number}
+            </span>
+            <h1 className="text-lg font-bold text-foreground truncate min-w-0">
+              {ticket.subject}
+            </h1>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className={STATUS_TONE[ticket.status]}>
