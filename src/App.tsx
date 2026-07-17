@@ -6,6 +6,8 @@ import { AuthProvider, RequireAdmin, RequireAuth, RequireStaff, useAuth } from '
 import CustomerDetailScreen from '@/screens/CustomerDetailScreen';
 import CustomersScreen from '@/screens/CustomersScreen';
 import DashboardScreen from '@/screens/DashboardScreen';
+import FeedbackDetailScreen from '@/screens/FeedbackDetailScreen';
+import FeedbackScreen from '@/screens/FeedbackScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import NotFoundScreen from '@/screens/NotFoundScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
@@ -62,6 +64,15 @@ const App = () => (
               <Route path="/tickets/:id" element={<TicketDetailScreen />} />
               <Route path="/customers" element={<CustomersScreen />} />
               <Route path="/customers/:id" element={<CustomerDetailScreen />} />
+              <Route path="/feedback" element={<FeedbackScreen />} />
+              <Route
+                path="/feedback/:id"
+                element={
+                  <RequireStaff>
+                    <FeedbackDetailScreen />
+                  </RequireStaff>
+                }
+              />
               <Route
                 path="/settings"
                 element={

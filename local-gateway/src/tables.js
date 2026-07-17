@@ -26,4 +26,13 @@ export const TABLES = {
     hasOwner: false,
     writeRoles: { create: ['admin', 'manager'], update: ['admin', 'manager'] },
   },
+  // managerFilter: fragmento SQL aplicado no GET só quando role === 'manager',
+  // pra dar um 3º nível de visibilidade além do owner_id/isElevated binário —
+  // manager só vê canal 'general', admin vê tudo (urgent + general).
+  customer_feedback: {
+    columns: ['channel', 'category', 'message', 'status'],
+    hasOwner: true,
+    managerFilter: "channel = 'general'",
+    writeRoles: { update: ['admin', 'manager'] },
+  },
 };

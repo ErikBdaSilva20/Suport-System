@@ -24,7 +24,7 @@ function NotificationBell() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const enabled = !!session && session.role !== 'rep';
-  const count = useOpenTicketsBadge(enabled);
+  const count = useOpenTicketsBadge(enabled, session?.role);
 
   if (!enabled) return null;
 
@@ -110,15 +110,81 @@ function AppSidebarContent() {
   );
 }
 
-export default function AppLayout() {
+function useInitials() {
   const { session } = useAuth();
-  const initials =
+  return (
     session?.user.name
       .split(' ')
       .map((n) => n[0])
       .join('')
       .slice(0, 2)
-      .toUpperCase() ?? 'U';
+      .toUpperCase() ?? 'U'
+  );
+}
+
+// Rep tem só 2 destinos (Meus Chamados + Feedback) — não o suficiente pra
+// justificar a Sidebar completa (removida na Story 10.1). Header enxuto com
+// 2 links simples em vez disso.
+function RepLayout() {
+  const { session, signOut } = useAuth();
+  const navigate = useNavigate();
+  const initials = useInitials();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col w-full">
+      <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/80 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-4 min-w-0">
+          <span className="text-lg font-bold text-foreground tracking-tight shrink-0">
+            HelpDesk
+          </span>
+          <nav className="flex items-center gap-1">
+            <NavLink
+              to="/tickets"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              activeClassName="bg-accent text-foreground"
+            >
+              Meus Chamados
+            </NavLink>
+            <NavLink
+              to="/feedback"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              activeClassName="bg-accent text-foreground"
+            >
+              Feedback
+            </NavLink>
+          </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium text-foreground hidden md:block">
+              {session?.user.name}
+            </span>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sair">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
+      <main className="flex-1 overflow-auto p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+function StaffLayout() {
+  const { session } = useAuth();
+  const initials = useInitials();
 
   return (
     <SidebarProvider>
@@ -148,4 +214,9 @@ export default function AppLayout() {
       </div>
     </SidebarProvider>
   );
+}
+
+export default function AppLayout() {
+  const { session } = useAuth();
+  return session?.role === 'rep' ? <RepLayout /> : <StaffLayout />;
 }

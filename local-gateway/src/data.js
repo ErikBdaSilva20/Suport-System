@@ -23,6 +23,8 @@ dataRouter.get('/:table', async (req, res) => {
   if (table.hasOwner && !isElevated(req.user.role)) {
     params.push(req.user.id);
     query += ' where owner_id = $1';
+  } else if (req.user.role === 'manager' && table.managerFilter) {
+    query += ` where ${table.managerFilter}`;
   }
   query += ' order by created_at desc';
 

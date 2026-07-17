@@ -69,6 +69,23 @@ create table if not exists ticket_notes (
 create index if not exists idx_ticket_notes_ticket on ticket_notes(ticket_id);
 create index if not exists idx_ticket_notes_owner on ticket_notes(owner_id);
 
+-- ============ CUSTOMER FEEDBACK ============
+-- Feedback do rep (cliente) sobre atendimento/produto, em 2 canais de
+-- visibilidade: 'urgent' (só admin) e 'general' (manager + admin).
+-- owner_id = rep que enviou. O gateway seta pela sessão.
+create table if not exists customer_feedback (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    text not null references "user"(id) on delete cascade,
+  channel     text not null check (channel in ('urgent', 'general')),
+  category    text,
+  message     text not null,
+  status      text not null default 'open' check (status in ('open', 'read', 'resolved')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists idx_customer_feedback_owner on customer_feedback(owner_id);
+create index if not exists idx_customer_feedback_channel on customer_feedback(channel);
+
 -- ============ SETTINGS ============
 -- Configuração do tenant (nome da empresa, cor primária). Tabela "lookup" de
 -- tenant único — sem owner_id; leitura liberada, escrita só admin/manager
@@ -98,4 +115,8 @@ create trigger t_tickets_updated before update on tickets
 
 drop trigger if exists t_settings_updated on settings;
 create trigger t_settings_updated before update on settings
+  for each row execute function touch_updated_at();
+
+drop trigger if exists t_customer_feedback_updated on customer_feedback;
+create trigger t_customer_feedback_updated before update on customer_feedback
   for each row execute function touch_updated_at();
