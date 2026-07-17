@@ -12,54 +12,14 @@
   ],
   "auth": { "provider": "better-auth", "roles": ["admin", "manager", "rep"] },
   "screens": [
-    {
-      "id": "dashboard",
-      "route": "/dashboard",
-      "title": "Dashboard",
-      "file": "src/screens/DashboardScreen"
-    },
-    {
-      "id": "tickets",
-      "route": "/tickets",
-      "title": "Tickets",
-      "file": "src/screens/TicketsScreen"
-    },
-    {
-      "id": "tickets-kanban",
-      "route": "/tickets/kanban",
-      "title": "Kanban de tickets",
-      "file": "src/screens/TicketKanbanScreen"
-    },
-    {
-      "id": "ticket-new",
-      "route": "/tickets/new",
-      "title": "Novo Ticket",
-      "file": "src/screens/TicketNewScreen"
-    },
-    {
-      "id": "ticket-detail",
-      "route": "/tickets/:id",
-      "title": "Detalhe do Ticket",
-      "file": "src/screens/TicketDetailScreen"
-    },
-    {
-      "id": "customers",
-      "route": "/customers",
-      "title": "Clientes",
-      "file": "src/screens/CustomersScreen"
-    },
-    {
-      "id": "customer-detail",
-      "route": "/customers/:id",
-      "title": "Detalhe do Cliente",
-      "file": "src/screens/CustomerDetailScreen"
-    },
-    {
-      "id": "settings",
-      "route": "/settings",
-      "title": "Configurações",
-      "file": "src/screens/SettingsScreen"
-    }
+    { "id": "dashboard", "route": "/dashboard", "title": "Dashboard", "file": "src/screens/DashboardScreen" },
+    { "id": "tickets", "route": "/tickets", "title": "Tickets", "file": "src/screens/TicketsScreen" },
+    { "id": "tickets-kanban", "route": "/tickets/kanban", "title": "Kanban de tickets", "file": "src/screens/TicketKanbanScreen" },
+    { "id": "ticket-new", "route": "/tickets/new", "title": "Novo Ticket", "file": "src/screens/TicketNewScreen" },
+    { "id": "ticket-detail", "route": "/tickets/:id", "title": "Detalhe do Ticket", "file": "src/screens/TicketDetailScreen" },
+    { "id": "customers", "route": "/customers", "title": "Clientes", "file": "src/screens/CustomersScreen" },
+    { "id": "customer-detail", "route": "/customers/:id", "title": "Detalhe do Cliente", "file": "src/screens/CustomerDetailScreen" },
+    { "id": "settings", "route": "/settings", "title": "Configurações", "file": "src/screens/SettingsScreen" }
   ],
   "editable": {
     "allow": [
@@ -80,7 +40,7 @@
       "src/lib/utils.ts",
       "vite.config.ts",
       "components.json",
-      "NeonDB/setup.sql"
+      "supabase/migrations/**"
     ]
   },
   "composio": { "toolkits": [] },

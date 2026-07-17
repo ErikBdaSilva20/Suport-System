@@ -2,8 +2,9 @@
 -- ANTES de rodar este script — ela não é criada aqui, é provisionada pelo
 -- tenant-gateway/Better-Auth. Sem ela, as foreign keys abaixo falham.
 --
--- Rodar contra o Postgres do Neon (psql, painel do Neon, etc.). Script
--- idempotente (create/drop ... if exists) — seguro rodar quantas vezes quiser.
+-- Rodar contra o Postgres do Docker local (com `npm run docker:up` já de pé):
+--   docker exec -i helpdesk-masia-db-1 psql -U helpdesk -d helpdesk < NeonDB/setup.sql
+-- Script idempotente (create/drop ... if exists) — seguro rodar quantas vezes quiser.
 
 create extension if not exists pgcrypto;
 
